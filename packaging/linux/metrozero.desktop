@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=MetroZero
+GenericName=Metroid: Zero Mission (native)
+Comment=Play your own copy of Metroid: Zero Mission natively
+Exec=metrozero
+Icon=metrozero
+StartupWMClass=MetroZero
+Terminal=false
+Categories=Game;
