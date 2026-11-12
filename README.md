@@ -39,6 +39,11 @@ Get the latest version from the [Releases page](https://github.com/sweatyeggs69/
   hardcore mode.
 - **Auto Morph Ball** (F1 > Cheats/Mods > Mods): run into a Morph Ball tunnel and Samus rolls in on her own. Off in
   RetroAchievements hardcore mode.
+- **Redux Mode** (F1 > Cheats/Mods): optional quality-of-life tweaks, switched on together or one at a time: faster
+  elevators, an accurate clock, bomb jumps in liquids, a Morph Ball that rests when still, and no low health alarm.
+  Inspired by [Metroid Zero Mission Redux](https://github.com/ShadowOne333/Metroid-Zero-Mission-Redux) by
+  ShadowOne333 and the community hacks it collects; these are MetroZero's own versions for the USA game, applied in
+  memory (your ROM file is never changed). Off in RetroAchievements hardcore mode.
 - **Import saves** from RetroArch, mGBA, VBA-M and others.
 - **RetroAchievements**, optional.
 - **Automatic updates** from this repository's releases, with your OK, without touching your saves.

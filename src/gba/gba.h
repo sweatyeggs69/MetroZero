@@ -96,7 +96,7 @@ public:
     std::span<const u8> sram() const { return sram_; }
     // Writable IWRAM, for the cheats menu. Call between frames.
     std::span<u8> iwram_mut() { return iwram_; }
-    // Writable ROM image (this Gba's own copy). Call between frames.
+    // Writable ROM image (this Gba's own copy), for Redux Mode's code tweaks. Call between frames.
     std::span<u8> rom_mut() { return rom_; }
     std::string debug_state() const;
     // Logs unimplemented BIOS calls / unusual events to stderr when true.

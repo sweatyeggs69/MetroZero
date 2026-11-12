@@ -299,627 +299,647 @@ msgstr "Cancelar"
 msgid "Loading save states is off in RetroAchievements hardcore mode."
 msgstr "Carregar estados salvos fica desativado no modo hardcore do RetroAchievements."
 
-#: src/app/app.cpp:264
+#: src/app/app.cpp:269
 msgid "States"
 msgstr "Estados"
 
-#: src/app/app.cpp:265
+#: src/app/app.cpp:270
 msgid "Cheats/Mods"
 msgstr "Trapaças/Mods"
 
-#: src/app/app.cpp:273
+#: src/app/app.cpp:278
 msgid "Achievements"
 msgstr "Conquistas"
 
-#: src/app/app.cpp:287
+#: src/app/app.cpp:292
 msgid "Save state slot: {0}"
 msgstr "Espaço de estado salvo: {0}"
 
-#: src/app/app.cpp:287
+#: src/app/app.cpp:292
 msgid "Save state slot: {0} (empty)"
 msgstr "Espaço de estado salvo: {0} (vazio)"
 
-#: src/app/app.cpp:291
+#: src/app/app.cpp:296
 msgid "Updates"
 msgstr "Atualizações"
 
-#: src/app/app.cpp:292
+#: src/app/app.cpp:297
 msgid "About"
 msgstr "Sobre"
 
-#: src/app/app.cpp:296
+#: src/app/app.cpp:301
 msgid "An unofficial project. Not affiliated with Nintendo."
 msgstr "Um projeto não oficial. Sem vínculo com a Nintendo."
 
-#: src/app/app.cpp:297
+#: src/app/app.cpp:302
 msgid "https://github.com/sweatyeggs69/MetroZero"
 msgstr "https://github.com/sweatyeggs69/MetroZero"
 
-#: src/app/app.cpp:309
+#: src/app/app.cpp:314
 msgid "MetroZero license (MIT)"
 msgstr "Licença do MetroZero (MIT)"
 
-#: src/app/app.cpp:310
+#: src/app/app.cpp:315
 msgid "Third-party notices"
 msgstr "Avisos de terceiros"
 
-#: src/app/app.cpp:311
+#: src/app/app.cpp:316
 msgid "DM Sans font license (SIL OFL 1.1)"
 msgstr "Licença da fonte DM Sans (SIL OFL 1.1)"
 
-#: src/app/app.cpp:348
+#: src/app/app.cpp:353
 msgid "The saved ROM changed since it was chosen. Please choose it again."
 msgstr "A ROM salva mudou desde que foi escolhida. Escolha-a de novo."
 
-#: src/app/app.cpp:370
+#: src/app/app.cpp:375
 msgid "Game Boy Advance ROM"
 msgstr "ROM de Game Boy Advance"
 
-#: src/app/app.cpp:371
+#: src/app/app.cpp:376
 msgid "All files"
 msgstr "Todos os arquivos"
 
-#: src/app/app.cpp:403
+#: src/app/app.cpp:408
 msgid "The BIOS file is not the retail GBA BIOS; using the built-in BIOS."
 msgstr "O arquivo não é a BIOS original do GBA; usando a BIOS embutida."
 
-#: src/app/app.cpp:441
+#: src/app/app.cpp:447
 msgid "F1 or Esc: settings menu"
 msgstr "F1 ou Esc: menu de configurações"
 
-#: src/app/app.cpp:650
+#: src/app/app.cpp:660
 msgid "{0}, native on your computer"
 msgstr "{0}, nativo no seu computador"
 
-#: src/app/app.cpp:653
+#: src/app/app.cpp:663
 msgid "To play, choose your own copy of the game: a ROM file dumped from your cartridge of {0}."
 msgstr "Para jogar, escolha sua própria cópia do jogo: um arquivo ROM extraído do seu cartucho de {0}."
 
-#: src/app/app.cpp:656
+#: src/app/app.cpp:666
 msgid "MetroZero only remembers where the file is. It never copies, uploads or changes it."
 msgstr "O MetroZero só lembra onde o arquivo está. Ele nunca o copia, envia ou altera."
 
-#: src/app/app.cpp:662
+#: src/app/app.cpp:672
 msgid "Choose ROM..."
 msgstr "Escolher ROM..."
 
-#: src/app/app.cpp:671
+#: src/app/app.cpp:681
 msgid "Quit"
 msgstr "Sair"
 
-#: src/app/app.cpp:681
+#: src/app/app.cpp:691
 msgid "just now"
 msgstr "agora mesmo"
 
-#: src/app/app.cpp:682
+#: src/app/app.cpp:692
 msgid "1 minute ago"
 msgstr "há 1 minuto"
 
-#: src/app/app.cpp:682
+#: src/app/app.cpp:692
 msgid "{0} minutes ago"
 msgstr "há {0} minutos"
 
-#: src/app/app.cpp:683
+#: src/app/app.cpp:693
 msgid "1 hour ago"
 msgstr "há 1 hora"
 
-#: src/app/app.cpp:683
+#: src/app/app.cpp:693
 msgid "{0} hours ago"
 msgstr "há {0} horas"
 
-#: src/app/app.cpp:684
+#: src/app/app.cpp:694
 msgid "1 day ago"
 msgstr "há 1 dia"
 
-#: src/app/app.cpp:684
+#: src/app/app.cpp:694
 msgid "{0} days ago"
 msgstr "há {0} dias"
 
-#: src/app/app.cpp:709
+#: src/app/app.cpp:719
 msgid "Resume"
 msgstr "Retomar"
 
-#: src/app/app.cpp:711
+#: src/app/app.cpp:721
 msgid "Restart"
 msgstr "Reiniciar"
 
-#: src/app/app.cpp:717
+#: src/app/app.cpp:727
 msgid "Continue"
 msgstr "Continuar"
 
-#: src/app/app.cpp:720
+#: src/app/app.cpp:730
 msgid "Play from the title screen"
 msgstr "Jogar a partir da tela de título"
 
-#: src/app/app.cpp:723
+#: src/app/app.cpp:733
 msgid "Play"
 msgstr "Jogar"
 
-#: src/app/app.cpp:727
+#: src/app/app.cpp:737
 msgid "Settings"
 msgstr "Configurações"
 
-#: src/app/app.cpp:757
+#: src/app/app.cpp:767
 msgid "ROM verified"
 msgstr "ROM verificada"
 
-#: src/app/app.cpp:759
+#: src/app/app.cpp:769
 msgid "Saved {0}"
 msgstr "Salvo {0}"
 
-#: src/app/app.cpp:840
+#: src/app/app.cpp:850
 msgid "unbound"
 msgstr "sem atalho"
 
-#: src/app/app.cpp:843
+#: src/app/app.cpp:853
 msgid "{0} save  {1} new  {2} load  {3}/{4} slot"
 msgstr "{0} salvar  {1} novo  {2} carregar  {3}/{4} espaço"
 
-#: src/app/app.cpp:846
+#: src/app/app.cpp:856
 msgid "save {0}; save to new slot {1}; load {2}; previous slot {3}; next slot {4}"
 msgstr "salvar {0}; salvar em novo espaço {1}; carregar {2}; espaço anterior {3}; próximo espaço {4}"
 
-#: src/app/app.cpp:877
+#: src/app/app.cpp:887
 msgid "Slot {0} overwritten"
 msgstr "Espaço {0} substituído"
 
-#: src/app/app.cpp:877
+#: src/app/app.cpp:887
 msgid "State saved to slot {0}"
 msgstr "Estado salvo no espaço {0}"
 
-#: src/app/app.cpp:879
+#: src/app/app.cpp:889
 msgid "Could not save the state"
 msgstr "Não foi possível salvar o estado"
 
-#: src/app/app.cpp:880
+#: src/app/app.cpp:890
 msgid "Overwrote {0}."
 msgstr "{0} substituído."
 
-#: src/app/app.cpp:880
+#: src/app/app.cpp:890
 msgid "Saved to {0}."
 msgstr "Salvo em {0}."
 
-#: src/app/app.cpp:893
+#: src/app/app.cpp:903
 msgid "All {0} slots are full. Delete one in the States tab, or save over the current slot."
 msgstr "Todos os {0} espaços estão cheios. Apague um na aba Estados ou salve sobre o espaço atual."
 
-#: src/app/app.cpp:895
+#: src/app/app.cpp:905
 msgid "No empty slot"
 msgstr "Nenhum espaço livre"
 
-#: src/app/app.cpp:922
+#: src/app/app.cpp:932
 msgid "{0} is empty."
 msgstr "{0} está vazio."
 
-#: src/app/app.cpp:933
+#: src/app/app.cpp:943
 msgid "Could not load the state"
 msgstr "Não foi possível carregar o estado"
 
-#: src/app/app.cpp:941
+#: src/app/app.cpp:951
 msgid "State loaded from slot {0}"
 msgstr "Estado carregado do espaço {0}"
 
-#: src/app/app.cpp:942
+#: src/app/app.cpp:952
 msgid "Loaded {0}."
 msgstr "{0} carregado."
 
-#: src/app/app.cpp:968
+#: src/app/app.cpp:978
 msgid "No ROM is chosen yet."
 msgstr "Nenhuma ROM foi escolhida ainda."
 
-#: src/app/app.cpp:983
+#: src/app/app.cpp:993
 msgid "Couldn't auto-load the save state"
 msgstr "Não foi possível carregar o estado automaticamente"
 
-#: src/app/app.cpp:983
+#: src/app/app.cpp:993
 msgid "Couldn't start the game"
 msgstr "Não foi possível iniciar o jogo"
 
-#: src/app/app.cpp:1000
+#: src/app/app.cpp:1010
 msgid "Choose your ROM first (Game tab)."
 msgstr "Escolha sua ROM primeiro (aba Jogo)."
 
-#: src/app/app.cpp:1003
+#: src/app/app.cpp:1013
 msgid "Shortcuts in game: {0}. Current: {1}. Change them in Controls."
 msgstr "Atalhos no jogo: {0}. Atual: {1}. Altere em Controles."
 
-#: src/app/app.cpp:1006
+#: src/app/app.cpp:1016
 msgid "Undo last load"
 msgstr "Desfazer o último carregamento"
 
-#: src/app/app.cpp:1011
+#: src/app/app.cpp:1021
 msgid "Went back to before the last load."
 msgstr "Voltou para antes do último carregamento."
 
-#: src/app/app.cpp:1016
+#: src/app/app.cpp:1026
 msgid "Show folder"
 msgstr "Mostrar pasta"
 
-#: src/app/app.cpp:1019
+#: src/app/app.cpp:1029
 msgid "Save to new slot"
 msgstr "Salvar em novo espaço"
 
-#: src/app/app.cpp:1023
+#: src/app/app.cpp:1033
 msgid "Overwrite the current slot"
 msgstr "Substituir o espaço atual"
 
-#: src/app/app.cpp:1023
+#: src/app/app.cpp:1033
 msgid "Save to a new slot each time"
 msgstr "Salvar em um novo espaço a cada vez"
 
-#: src/app/app.cpp:1025
+#: src/app/app.cpp:1035
 msgid "Save state shortcut:"
 msgstr "Atalho de salvar estado:"
 
-#: src/app/app.cpp:1070
+#: src/app/app.cpp:1080
 msgid "Unusable"
 msgstr "Inutilizável"
 
-#: src/app/app.cpp:1070
+#: src/app/app.cpp:1080
 msgid "Empty"
 msgstr "Vazio"
 
-#: src/app/app.cpp:1089
+#: src/app/app.cpp:1099
 msgid "%b %d, %H:%M"
 msgstr "%d/%m, %H:%M"
 
-#: src/app/app.cpp:1090
+#: src/app/app.cpp:1100
 msgid "{0}  |  {1} played"
 msgstr "{0}  |  {1} jogado"
 
-#: src/app/app.cpp:1092
+#: src/app/app.cpp:1102
 msgid "No state saved yet"
 msgstr "Nenhum estado salvo ainda"
 
-#: src/app/app.cpp:1100
+#: src/app/app.cpp:1110
 msgid "Save"
 msgstr "Salvar"
 
-#: src/app/app.cpp:1104
+#: src/app/app.cpp:1114
 msgid "Load"
 msgstr "Carregar"
 
-#: src/app/app.cpp:1113
+#: src/app/app.cpp:1123
 msgid "Rename..."
 msgstr "Renomear..."
 
-#: src/app/app.cpp:1117
+#: src/app/app.cpp:1127
 msgid "Export..."
 msgstr "Exportar..."
 
-#: src/app/app.cpp:1120
+#: src/app/app.cpp:1130
 msgid "MetroZero save state"
 msgstr "Estado salvo do MetroZero"
 
-#: src/app/app.cpp:1130
+#: src/app/app.cpp:1140
 msgid "Import into this slot..."
 msgstr "Importar para este espaço..."
 
-#: src/app/app.cpp:1143
+#: src/app/app.cpp:1153
 msgid "Delete..."
 msgstr "Apagar..."
 
-#: src/app/app.cpp:1155
+#: src/app/app.cpp:1165
 msgid "Rename state"
 msgstr "Renomear estado"
 
-#: src/app/app.cpp:1157
+#: src/app/app.cpp:1167
 msgid "Label for {0}:"
 msgstr "Nome para {0}:"
 
-#: src/app/app.cpp:1171
+#: src/app/app.cpp:1181
 msgid "Delete state?"
 msgstr "Apagar o estado?"
 
-#: src/app/app.cpp:1173
+#: src/app/app.cpp:1183
 msgid "Delete {0}? It is moved to the Trash."
 msgstr "Apagar {0}? Ele vai para a lixeira."
 
-#: src/app/app.cpp:1174
+#: src/app/app.cpp:1184
 msgid "Delete"
 msgstr "Apagar"
 
-#: src/app/app.cpp:1177
+#: src/app/app.cpp:1187
 msgid "{0} moved to the Trash."
 msgstr "{0} foi para a lixeira."
 
-#: src/app/app.cpp:1198
+#: src/app/app.cpp:1208
 msgid "Could not read {0}"
 msgstr "Não foi possível ler {0}"
 
-#: src/app/app.cpp:1217
+#: src/app/app.cpp:1227
 msgid "Could not write the save file {0}"
 msgstr "Não foi possível gravar o arquivo de save {0}"
 
-#: src/app/app.cpp:1227
+#: src/app/app.cpp:1237
 msgid "Imported {0}."
 msgstr "{0} importado."
 
-#: src/app/app.cpp:1228
+#: src/app/app.cpp:1238
 msgid "Imported {0}. The previous save was backed up."
 msgstr "{0} importado. Foi feita uma cópia do save anterior."
 
-#: src/app/app.cpp:1229
+#: src/app/app.cpp:1239
 msgid "The game was restarted."
 msgstr "O jogo foi reiniciado."
 
-#: src/app/app.cpp:1240
+#: src/app/app.cpp:1250
 msgid "There is no save to export yet. Play the game first."
 msgstr "Ainda não há save para exportar. Jogue primeiro."
 
-#: src/app/app.cpp:1247
+#: src/app/app.cpp:1257
 msgid "Could not write {0}"
 msgstr "Não foi possível gravar {0}"
 
-#: src/app/app.cpp:1250
+#: src/app/app.cpp:1260
 msgid "Exported to {0} (raw 32 KiB, works in mGBA, VBA-M and RetroArch)."
 msgstr "Exportado para {0} (32 KiB bruto, funciona no mGBA, VBA-M e RetroArch)."
 
-#: src/app/app.cpp:1255
+#: src/app/app.cpp:1265
 msgid "Saves"
 msgstr "Saves"
 
-#: src/app/app.cpp:1258
+#: src/app/app.cpp:1268
 msgid "Show save folder"
 msgstr "Mostrar pasta de saves"
 
-#: src/app/app.cpp:1264
+#: src/app/app.cpp:1274
 msgid "Import save..."
 msgstr "Importar save..."
 
-#: src/app/app.cpp:1267
+#: src/app/app.cpp:1277
 msgid "Game saves"
 msgstr "Saves de jogo"
 
-#: src/app/app.cpp:1277
+#: src/app/app.cpp:1287
 msgid "Export save..."
 msgstr "Exportar save..."
 
-#: src/app/app.cpp:1280
+#: src/app/app.cpp:1290
 msgid "Game save"
 msgstr "Save de jogo"
 
-#: src/app/app.cpp:1290
+#: src/app/app.cpp:1300
 msgid "Restore backup..."
 msgstr "Restaurar cópia..."
 
-#: src/app/app.cpp:1293
+#: src/app/app.cpp:1303
 msgid "Imports .sav / .srm battery saves from mGBA, VBA-M, RetroArch and others."
 msgstr "Importa saves .sav / .srm do mGBA, VBA-M, RetroArch e outros."
 
-#: src/app/app.cpp:1301
+#: src/app/app.cpp:1311
 msgid "Replace your save?"
 msgstr "Substituir seu save?"
 
-#: src/app/app.cpp:1306
+#: src/app/app.cpp:1316
 msgid "Use {0} as your save?"
 msgstr "Usar {0} como seu save?"
 
-#: src/app/app.cpp:1308
+#: src/app/app.cpp:1318
 msgid "Your current save is backed up first (the last 10 are kept)."
 msgstr "Seu save atual é copiado antes (os 10 últimos são mantidos)."
 
-#: src/app/app.cpp:1310
+#: src/app/app.cpp:1320
 msgid "Importing restarts the game; unsaved progress is lost."
 msgstr "Importar reinicia o jogo; o progresso não salvo é perdido."
 
-#: src/app/app.cpp:1314
+#: src/app/app.cpp:1324
 msgid "Replace save"
 msgstr "Substituir save"
 
-#: src/app/app.cpp:1327
+#: src/app/app.cpp:1337
 msgid "Restore a backup"
 msgstr "Restaurar uma cópia"
 
-#: src/app/app.cpp:1333
+#: src/app/app.cpp:1343
 msgid "No backups yet. One is made every time a save is replaced."
 msgstr "Ainda não há cópias. Uma é feita sempre que um save é substituído."
 
-#: src/app/app.cpp:1346
+#: src/app/app.cpp:1356
 msgid "the backup from {0}"
 msgstr "a cópia de {0}"
 
-#: src/app/app.cpp:1346
+#: src/app/app.cpp:1356
 msgid "backup"
 msgstr "cópia"
 
-#: src/app/app.cpp:1360
+#: src/app/app.cpp:1378
 msgid "Supplies"
 msgstr "Suprimentos"
 
-#: src/app/app.cpp:1365
+#: src/app/app.cpp:1383
 msgid "Unlimited health"
 msgstr "Energia ilimitada"
 
-#: src/app/app.cpp:1365
+#: src/app/app.cpp:1383
 msgid "Energy stays full, so damage never drains it."
 msgstr "A energia fica cheia, então o dano nunca a reduz."
 
-#: src/app/app.cpp:1366
+#: src/app/app.cpp:1384
 msgid "Unlimited missiles"
 msgstr "Mísseis ilimitados"
 
-#: src/app/app.cpp:1366
+#: src/app/app.cpp:1384
 msgid "Missiles refill as fast as you fire them. Does not unlock them early."
 msgstr "Os mísseis recarregam tão rápido quanto você os dispara. Não os libera antes da hora."
 
-#: src/app/app.cpp:1367
+#: src/app/app.cpp:1385
 msgid "Unlimited super missiles"
 msgstr "Supermísseis ilimitados"
 
-#: src/app/app.cpp:1367
+#: src/app/app.cpp:1385
 msgid "Super missiles refill as fast as you fire them. Does not unlock them early."
 msgstr "Os supermísseis recarregam tão rápido quanto você os dispara. Não os libera antes da hora."
 
-#: src/app/app.cpp:1368
+#: src/app/app.cpp:1386
 msgid "Unlimited power bombs"
 msgstr "Bombas de energia ilimitadas"
 
-#: src/app/app.cpp:1368
+#: src/app/app.cpp:1386
 msgid "Power bombs refill after each one. Does not unlock them early."
 msgstr "As bombas de energia recarregam depois de cada uma. Não as libera antes da hora."
 
-#: src/app/app.cpp:1382
+#: src/app/app.cpp:1400
 msgid "Cheats and mods are off while RetroAchievements hardcore mode is on."
 msgstr "Trapaças e mods ficam desligados no modo hardcore do RetroAchievements."
 
-#: src/app/app.cpp:1383
+#: src/app/app.cpp:1401
 msgid "Supplies refill up to your current maximum. Cheats stay on until you turn them off."
 msgstr "Os suprimentos recarregam até o seu máximo atual. As trapaças ficam ativas até você desligá-las."
 
-#: src/app/app.cpp:1387
+#: src/app/app.cpp:1405
 msgid "Mods"
 msgstr "Mods"
 
-#: src/app/app.cpp:1391
+#: src/app/app.cpp:1409
 msgid "Auto Morph Ball"
 msgstr "Morph Ball automática"
 
-#: src/app/app.cpp:1393
+#: src/app/app.cpp:1411
 msgid "Run into a Morph Ball tunnel and Samus rolls in on her own. Needs the Morph Ball."
 msgstr "Corra para um túnel da Morph Ball e Samus entra rolando sozinha. Requer a Morph Ball."
 
-#: src/app/app.cpp:1402
+#: src/app/app.cpp:1427
+msgid "Redux Mode"
+msgstr "Modo Redux"
+
+#: src/app/app.cpp:1435
+msgid "Custom"
+msgstr "Personalizado"
+
+#: src/app/app.cpp:1438
+msgid "Quality-of-life tweaks for the original game. Change them any time, even mid-game."
+msgstr "Melhorias de conveniência para o jogo original. Mude quando quiser, até no meio do jogo."
+
+#: src/app/app.cpp:1448
+msgid "Not available for this ROM."
+msgstr "Não disponível para esta ROM."
+
+#: src/app/app.cpp:1457
+msgid "Inspired by Metroid Zero Mission Redux by ShadowOne333 and the community hacks it collects. These are MetroZero's own versions for the USA game; no Redux files are used."
+msgstr "Inspirado no Metroid Zero Mission Redux de ShadowOne333 e nos hacks da comunidade que ele reúne. São versões próprias do MetroZero para o jogo dos EUA; nenhum arquivo do Redux é usado."
+
+#: src/app/app.cpp:1466
 msgid "Game ROM"
 msgstr "ROM do jogo"
 
-#: src/app/app.cpp:1405
+#: src/app/app.cpp:1469
 msgid "{0}, header match (fingerprint not pinned yet)"
 msgstr "{0}, cabeçalho confere (impressão digital ainda não fixada)"
 
-#: src/app/app.cpp:1407
+#: src/app/app.cpp:1471
 msgid "{0}, verified"
 msgstr "{0}, verificada"
 
-#: src/app/app.cpp:1417
+#: src/app/app.cpp:1481
 msgid "No ROM chosen"
 msgstr "Nenhuma ROM escolhida"
 
-#: src/app/app.cpp:1419
+#: src/app/app.cpp:1483
 msgid "Change ROM..."
 msgstr "Trocar ROM..."
 
-#: src/app/app.cpp:1426
+#: src/app/app.cpp:1490
 msgid "Startup"
 msgstr "Inicialização"
 
-#: src/app/app.cpp:1428
+#: src/app/app.cpp:1492
 msgid "Auto-load save state on launch"
 msgstr "Carregar o estado ao abrir"
 
-#: src/app/app.cpp:1429
+#: src/app/app.cpp:1493
 msgid "Opening MetroZero goes straight back to where you left off (your most recent save state)."
 msgstr "Ao abrir, o MetroZero volta direto para onde você parou (seu estado mais recente)."
 
-#: src/app/app.cpp:1430
+#: src/app/app.cpp:1494
 msgid "Hold Shift while opening MetroZero to see this menu instead."
 msgstr "Segure Shift ao abrir o MetroZero para ver este menu."
 
-#: src/app/app.cpp:1434
+#: src/app/app.cpp:1498
 msgid "BIOS (optional)"
 msgstr "BIOS (opcional)"
 
-#: src/app/app.cpp:1440
+#: src/app/app.cpp:1504
 msgid "The BIOS file could not be read; using the built-in BIOS."
 msgstr "Não foi possível ler o arquivo da BIOS; usando a BIOS embutida."
 
-#: src/app/app.cpp:1443
+#: src/app/app.cpp:1507
 msgid "Built-in BIOS. No file is needed."
 msgstr "BIOS embutida. Nenhum arquivo é necessário."
 
-#: src/app/app.cpp:1447
+#: src/app/app.cpp:1511
 msgid "Retail GBA BIOS verified: the Game Boy logo plays when the game starts, and the game runs on this BIOS."
 msgstr "BIOS original do GBA verificada: o logo do Game Boy aparece ao iniciar e o jogo roda nesta BIOS."
 
-#: src/app/app.cpp:1452
+#: src/app/app.cpp:1516
 msgid "Use a BIOS file..."
 msgstr "Usar um arquivo de BIOS..."
 
-#: src/app/app.cpp:1452
+#: src/app/app.cpp:1516
 msgid "Use the built-in BIOS"
 msgstr "Usar a BIOS embutida"
 
-#: src/app/app.cpp:1457
+#: src/app/app.cpp:1521
 msgid "Takes effect the next time the game starts."
 msgstr "Vale a partir da próxima vez que o jogo iniciar."
 
-#: src/app/app.cpp:1459
+#: src/app/app.cpp:1523
 msgid "Shortcut"
 msgstr "Atalho"
 
-#: src/app/app.cpp:1460
+#: src/app/app.cpp:1524
 msgid "A shortcut starts the game directly, skipping the launcher."
 msgstr "Um atalho inicia o jogo direto, sem passar pelo iniciador."
 
-#: src/app/app.cpp:1467
+#: src/app/app.cpp:1531
 msgid "Applications"
 msgstr "Aplicativos"
 
-#: src/app/app.cpp:1469
+#: src/app/app.cpp:1533
 msgid "Start menu"
 msgstr "menu Iniciar"
 
-#: src/app/app.cpp:1471
+#: src/app/app.cpp:1535
 msgid "applications menu"
 msgstr "menu de aplicativos"
 
-#: src/app/app.cpp:1482
+#: src/app/app.cpp:1546
 msgid "Desktop"
 msgstr "Área de trabalho"
 
-#: src/app/app.cpp:1484
+#: src/app/app.cpp:1548
 msgid "Update {0} shortcut"
 msgstr "Atualizar atalho ({0})"
 
-#: src/app/app.cpp:1484
+#: src/app/app.cpp:1548
 msgid "Add to {0}"
 msgstr "Adicionar a {0}"
 
-#: src/app/app.cpp:1495
+#: src/app/app.cpp:1559
 msgid "Remove"
 msgstr "Remover"
 
-#: src/app/app.cpp:1495
+#: src/app/app.cpp:1559
 msgid "Remove shortcut"
 msgstr "Remover atalho"
 
-#: src/app/app.cpp:1506
+#: src/app/app.cpp:1570
 msgid "Replace existing item?"
 msgstr "Substituir o item existente?"
 
-#: src/app/app.cpp:1511
+#: src/app/app.cpp:1575
 msgid "already exists and was not made by MetroZero."
 msgstr "já existe e não foi criado pelo MetroZero."
 
-#: src/app/app.cpp:1512
+#: src/app/app.cpp:1576
 msgid "Replace it? The existing item is moved to the Trash."
 msgstr "Substituir? O item existente vai para a lixeira."
 
-#: src/app/app.cpp:1513
+#: src/app/app.cpp:1577
 msgid "Replace"
 msgstr "Substituir"
 
-#: src/app/app.cpp:1518
+#: src/app/app.cpp:1582
 msgid "Keep it"
 msgstr "Manter"
 
-#: src/app/app.cpp:1519
+#: src/app/app.cpp:1583
 msgid "Left the existing item alone."
 msgstr "O item existente não foi alterado."
 
-#: src/app/app.cpp:1625
+#: src/app/app.cpp:1689
 msgid "Exported {0}."
 msgstr "{0} exportado."
 
-#: src/app/app.cpp:1632
+#: src/app/app.cpp:1696
 msgid "Imported into {0}."
 msgstr "Importado para {0}."
 
-#: src/app/app.cpp:1641
+#: src/app/app.cpp:1705
 msgid "Could not read that BIOS file."
 msgstr "Não foi possível ler esse arquivo de BIOS."
 
-#: src/app/app.cpp:1643
+#: src/app/app.cpp:1707
 msgid "BIOS set. It is used the next time the game starts."
 msgstr "BIOS definida. Ela será usada na próxima vez que o jogo iniciar."
 
@@ -990,6 +1010,46 @@ msgstr "Atalho atualizado:\n{0}"
 #: src/app/platform.cpp:435
 msgid "Shortcut created:\n{0}"
 msgstr "Atalho criado:\n{0}"
+
+#: src/app/redux.h:66
+msgid "Faster elevators"
+msgstr "Elevadores mais rápidos"
+
+#: src/app/redux.h:66
+msgid "Elevators move twice as fast."
+msgstr "Os elevadores andam duas vezes mais rápido."
+
+#: src/app/redux.h:67
+msgid "Accurate in-game clock"
+msgstr "Relógio do jogo preciso"
+
+#: src/app/redux.h:67
+msgid "A second is 60 frames, so the clock matches real time."
+msgstr "Um segundo são 60 quadros, então o relógio bate com o tempo real."
+
+#: src/app/redux.h:68
+msgid "Bomb jumps in liquids"
+msgstr "Saltos com bomba em líquidos"
+
+#: src/app/redux.h:68
+msgid "Bombs launch the Morph Ball in water and lava, even without the Gravity Suit."
+msgstr "As bombas impulsionam a Morph Ball na água e na lava, mesmo sem o Traje Gravitacional."
+
+#: src/app/redux.h:69
+msgid "Morph Ball rests when still"
+msgstr "A Morph Ball descansa parada"
+
+#: src/app/redux.h:69
+msgid "The Morph Ball only rolls while it is moving."
+msgstr "A Morph Ball só rola enquanto está se movendo."
+
+#: src/app/redux.h:70
+msgid "No low health alarm"
+msgstr "Sem alarme de energia baixa"
+
+#: src/app/redux.h:70
+msgid "Turns off the beeping when energy is low."
+msgstr "Desliga o bipe quando a energia está baixa."
 
 #: src/app/save_import.cpp:61
 msgid "That is a save state, not a battery save. Save states from other emulators can't be imported; use the in-game save file instead (.sav or .srm)."

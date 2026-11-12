@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <imgui.h>
+#include <imgui_internal.h>  // ImGuiItemFlags_MixedValue for the Redux Mode checkbox
 #include <imgui_impl_sdl3.h>
 #include <imgui_impl_sdlrenderer3.h>
 #include <stb_image.h>
@@ -20,6 +21,7 @@
 #include "app/achievements.h"
 #include "app/bmp.h"
 #include "app/cheats.h"
+#include "app/redux.h"
 #include "app/auto_morph.h"
 #include "app/config.h"
 #include "app/fsutil.h"
@@ -113,6 +115,9 @@ private:
     void draw_states_tab();
     void draw_cheats_tab(Config& config);
     bool cheats_allowed() const;
+    redux::Flags redux_flags() const;
+    redux::Flags redux_ok_{};  // which Redux Mode tweaks match the loaded ROM
+    redux::Host redux_host_;
     auto_morph::Assist auto_morph_;
     std::unique_ptr<states::Store> store_;
     int slot_ = states::kDefaultSlot;
@@ -408,6 +413,7 @@ std::optional<std::vector<std::uint8_t>> App::load_bios(std::string* error) {
 
 std::unique_ptr<gba::Gba> App::make_gba(bool with_save) {
     auto g = std::make_unique<gba::Gba>(rom_.rom.data, with_save ? save_path_for(config_, rom_) : fs::path());
+    for (std::size_t i = 0; i < redux::kTweakCount; ++i) redux_ok_[i] = redux::available(rom_.rom.data, redux::kTweaks[i]);
     g->verbose = opt_.verbose;
     std::string err;
     if (auto bios = load_bios(&err)) {
@@ -506,8 +512,12 @@ void App::update_emulation() {
         } else {
             auto_morph_.reset();
         }
+        const redux::Flags mods = redux_flags();
+        redux::sync(game_->rom_mut(), mods, redux_ok_);
         game_->set_keys(keys);
+        redux_host_.before_frame(game_->iwram_mut(), mods, keys);
         game_->run_frame();
+        redux_host_.after_frame(game_->iwram_mut(), mods);
         if (cheats_allowed()) {
             cheats::apply(game_->iwram_mut(), cheats::Flags{config_.get_bool("cheats.health", false),
                                                             config_.get_bool("cheats.missiles", false),
@@ -1356,6 +1366,14 @@ void App::draw_save_section() {
 
 bool App::cheats_allowed() const { return !(achievements_ && achievements_->hardcore()); }
 
+redux::Flags App::redux_flags() const {
+    redux::Flags f{};
+    if (!cheats_allowed()) return f;
+    for (std::size_t i = 0; i < redux::kTweakCount; ++i)
+        f[i] = redux_ok_[i] && config_.get_bool(std::string("redux.") + redux::kTweaks[i].id, false);
+    return f;
+}
+
 void App::draw_cheats_tab(Config& config) {
     theme::section(tr("Supplies"));
     const bool allowed = cheats_allowed();
@@ -1394,6 +1412,52 @@ void App::draw_cheats_tab(Config& config) {
         ImGui::PopFont();
     }
     ImGui::EndDisabled();
+    ImGui::Dummy(ImVec2(0, 6.0f));
+    auto key = [](const redux::Tweak& t) { return std::string("redux.") + t.id; };
+    int on = 0, total = 0;
+    for (std::size_t i = 0; i < redux::kTweakCount; ++i) {
+        if (!redux_ok_[i]) continue;
+        ++total;
+        if (config.get_bool(key(redux::kTweaks[i]), false)) ++on;
+    }
+    const bool mixed = on > 0 && on < total;
+    ImGui::BeginDisabled(!allowed || total == 0);
+    bool all = total > 0 && on == total;
+    ImGui::PushItemFlag(ImGuiItemFlags_MixedValue, mixed);
+    if (theme::toggle(tr("Redux Mode"), &all)) {
+        const bool value = !(on == total);  // all on -> all off; otherwise turn everything on
+        for (std::size_t i = 0; i < redux::kTweakCount; ++i)
+            if (redux_ok_[i]) config.set_bool(key(redux::kTweaks[i]), value);
+    }
+    ImGui::PopItemFlag();
+    if (mixed) {
+        ImGui::SameLine();
+        ImGui::TextColored(theme::palette().highlight, "%s", tr("Custom"));
+    }
+    ImGui::PushFont(theme::font_small());
+    ImGui::TextDisabled("%s", tr("Quality-of-life tweaks for the original game. Change them any time, even mid-game."));
+    ImGui::PopFont();
+    ImGui::Dummy(ImVec2(0, 2.0f));
+    ImGui::Indent();
+    for (std::size_t i = 0; i < redux::kTweakCount; ++i) {
+        const redux::Tweak& t = redux::kTweaks[i];
+        ImGui::BeginDisabled(!redux_ok_[i]);
+        bool v = redux_ok_[i] && config.get_bool(key(t), false);
+        if (theme::toggle(tr(t.label), &v)) config.set_bool(key(t), v);
+        ImGui::PushFont(theme::font_small());
+        ImGui::TextDisabled("%s", redux_ok_[i] ? tr(t.help) : tr("Not available for this ROM."));
+        ImGui::PopFont();
+        ImGui::EndDisabled();
+    }
+    ImGui::Unindent();
+    ImGui::EndDisabled();
+    ImGui::Dummy(ImVec2(0, 4.0f));
+    ImGui::PushFont(theme::font_small());
+    ImGui::PushTextWrapPos(0);
+    ImGui::TextDisabled("%s", tr("Inspired by Metroid Zero Mission Redux by ShadowOne333 and the community hacks it collects. "
+                        "These are MetroZero's own versions for the USA game; no Redux files are used."));
+    ImGui::PopTextWrapPos();
+    ImGui::PopFont();
 }
 
 void App::draw_game_tab(Config& config) {

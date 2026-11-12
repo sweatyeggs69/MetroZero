@@ -26,6 +26,7 @@
 #include "app/fsutil.h"
 #include "app/licenses.h"
 #include "app/platform.h"
+#include "app/redux.h"
 #include "app/save_import.h"
 #include "gba/gba.h"
 #include "rom.h"
@@ -48,6 +49,7 @@ struct Options {
     bool open_settings = false;
     std::string open_tab, state_script;
     bool mute = false, silent_audio = false;
+    bool redux = false;  // --redux: headless runs with every Redux Mode tweak on
     bool prepare = false;  // --prepare: check the ROM and remember it, without a window
     int window_w = 0, window_h = 0;
     std::filesystem::path import_save, export_save;
@@ -76,6 +78,7 @@ void usage() {
         "  --input <script>   scripted input, e.g. 300:8,310:0 (game frame:hex key mask); also in --play\n"
         "  --check-update     ask GitHub for the latest release, print the result and exit\n"
         "  --update-now       download, verify and install the latest release, then exit\n"
+        "  --redux            (headless) run with every Redux Mode tweak on\n"
         "  --verbose          log unimplemented BIOS calls\n"
         "  --console          (Windows) open a console window for log output\n"
         "  --window WxH       initial window size, e.g. 1280x800\n"
@@ -122,6 +125,7 @@ int main(int argc, char** argv) {
         else if (a == "--bios") opt.bios = next_path();
         else if (a == "--frames") opt.frames = std::strtol(next().c_str(), nullptr, 10);
         else if (a == "--headless") opt.headless = true;
+        else if (a == "--redux") opt.redux = true;
         else if (a == "--dump-frame") opt.dump_frame = next_path();
         else if (a == "--input") opt.script = next();
         else if (a == "--dump-audio") opt.dump_audio = next_path();
@@ -352,12 +356,24 @@ int main(int argc, char** argv) {
         long frames = opt.frames < 0 ? 600 : opt.frames;
         size_t si = 0;
         std::vector<std::int16_t> audio, all_audio;
+        metrozero::redux::Flags redux_on{}, redux_ok{};
+        metrozero::redux::Host redux_host;
         std::uint16_t keys = 0;
+        if (opt.redux) {
+            for (std::size_t i = 0; i < metrozero::redux::kTweakCount; ++i) {
+                redux_ok[i] = metrozero::redux::available(rom.data, metrozero::redux::kTweaks[i]);
+                redux_on[i] = true;
+                std::printf("Redux: %s %s\n", metrozero::redux::kTweaks[i].id, redux_ok[i] ? "on" : "UNAVAILABLE");
+            }
+            metrozero::redux::sync(gba->rom_mut(), redux_on, redux_ok);
+        }
         Uint64 t0 = SDL_GetTicksNS();
         for (long f = 0; f < frames; ++f) {
             while (si < script.size() && script[si].first <= f) keys = script[si++].second;
             gba->set_keys(keys);
+            if (opt.redux) redux_host.before_frame(gba->iwram_mut(), redux_on, keys);
             gba->run_frame();
+            if (opt.redux) redux_host.after_frame(gba->iwram_mut(), redux_on);
             audio.clear();
             gba->take_audio(audio);
             if (!opt.dump_audio.empty()) all_audio.insert(all_audio.end(), audio.begin(), audio.end());
