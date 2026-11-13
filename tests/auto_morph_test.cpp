@@ -144,7 +144,6 @@ int main() {
         check(downs > 0 && downs <= kStepTimeout, "stops pressing Down when the game doesn't respond");
     }
 
-    if (failures == 0) std::printf("auto_morph: all checks passed\n");
     {
         // Morph button: works with the mod off, from standing, and a second press stands her up.
         Fake f;
@@ -153,7 +152,7 @@ int main() {
         Assist a;
         a.request_toggle();
         bool sent_down = false;
-        for (int i = 0; i < 12 && f.iwram[game::kSamusDataAddress - 0x03000000] != kPoseMorphBall; ++i) {
+        for (int i = 0; i < 12 && read_samus(f.mem()).pose != kPoseMorphBall; ++i) {
             const std::uint16_t k = a.step(kRight, f.mem(), false);
             check(!(k & kRight), "morph button: the direction is let go while morphing");
             if (k & kDown) {
@@ -187,5 +186,6 @@ int main() {
         f.samus(2, 4, +1);
         for (int i = 0; i < 20; ++i) check(a.step(kRight, f.mem(), false) == kRight, "mod off: no auto morph");
     }
+    if (failures == 0) std::printf("auto_morph: all checks passed\n");
     return failures == 0 ? 0 : 1;
 }
