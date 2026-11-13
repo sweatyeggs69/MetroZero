@@ -60,8 +60,12 @@ Or get the latest version for your system from the [Releases page](https://githu
 
 Everything except F1, Esc and F11 can be rebound in F1 > Controls.
 
+Button names follow your controller's layout (Xbox, PlayStation or Nintendo). Connected controllers
+are printed to the terminal; if SDL doesn't know yours, add its layout to a `gamecontrollerdb.txt` in the
+settings folder.
+
 F1 > Controls also has Metroid extras, off until you set them up: a missile toggle, diagonal aim
-buttons, and aiming with the right stick.
+buttons, aiming with the right stick, and a one-button Morph Ball (press to morph, again to stand up).
 
 ## Features
 
