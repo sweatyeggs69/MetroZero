@@ -65,7 +65,9 @@ std::vector<Chord> split_chords(const std::string& text);
 // All are unbound by default.
 //   MissileToggle: each press arms or disarms missiles, so R stays held until pressed again.
 //   AimUp / AimDown: hold to aim diagonally up or down (the game's L, and L + Down).
-enum class Action { MissileToggle, AimUp, AimDown, Count };
+//   Morph: one press morphs into the Morph Ball, another stands back up (the app presses Down twice
+//   or Up for you; see app/auto_morph.h). Manager only reports the press (take_morph_press).
+enum class Action { MissileToggle, AimUp, AimDown, Morph, Count };
 inline constexpr int kActionCount = static_cast<int>(Action::Count);
 const char* name(Action a);      // "Missile toggle"
 const char* key_name(Action a);  // "missile_toggle"
@@ -114,6 +116,12 @@ public:
     bool fast_forward_latched() const { return ff_latched_; }
     void set_fast_forward_latched(bool on) { ff_latched_ = on; }
     bool missiles_armed() const { return missiles_armed_; }
+    // True once for each press of the Morph action since the last call (counted by poll_frame).
+    bool take_morph_press() {
+        const bool p = morph_pressed_;
+        morph_pressed_ = false;
+        return p;
+    }
 
     // Remapping walks through every button in turn. The first key, pad button or stick
     // direction pressed replaces that button's bindings for that device type.
@@ -185,6 +193,8 @@ private:
     Source remap_source_ = Source::Any;  // device the current single rebind listens to
     bool missiles_armed_ = false;
     bool toggle_was_held_ = false;
+    bool morph_was_held_ = false;
+    bool morph_pressed_ = false;
     int last_aim_ = 0;  // -1 up, +1 down, 0 none, as sent last frame
     int aim_frames_ = 0;  // frames the current aim has been held
     static constexpr int kAimLeadFrames = 2;  // L alone before Down, so standing Samus doesn't crouch

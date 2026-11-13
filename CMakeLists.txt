@@ -167,6 +167,7 @@ if(TARGET SDL3::SDL3)
         src/options/options_panel.cpp
         src/options/presenter.cpp
         src/options/input.cpp
+        src/options/menu_pad.cpp
     )
     target_include_directories(metrozero_options PUBLIC src)
     target_link_libraries(metrozero_options PUBLIC imgui metrozero_display metrozero_app metrozero_states SDL3::SDL3)

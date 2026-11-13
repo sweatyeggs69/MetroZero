@@ -144,6 +144,48 @@ int main() {
         check(downs > 0 && downs <= kStepTimeout, "stops pressing Down when the game doesn't respond");
     }
 
+    {
+        // Morph button: works with the mod off, from standing, and a second press stands her up.
+        Fake f;
+        f.room(kTunnel);
+        f.samus(5, 4, +1);
+        Assist a;
+        a.request_toggle();
+        bool sent_down = false;
+        for (int i = 0; i < 12 && read_samus(f.mem()).pose != kPoseMorphBall; ++i) {
+            const std::uint16_t k = a.step(kRight, f.mem(), false);
+            check(!(k & kRight), "morph button: the direction is let go while morphing");
+            if (k & kDown) {
+                sent_down = true;
+                // The game crouches on the first Down press and morphs on the next one.
+                f.pose(read_samus(f.mem()).pose == kPoseStanding ? kPoseCrouching : kPoseMorphBall);
+            }
+        }
+        check(sent_down && read_samus(f.mem()).pose == kPoseMorphBall, "morph button morphs from standing");
+        a.step(0, f.mem(), false);
+        check(!a.busy(), "morph button: done once in the ball");
+
+        a.request_toggle();
+        bool sent_up = false;
+        for (int i = 0; i < 12 && read_samus(f.mem()).pose != kPoseStanding; ++i) {
+            const std::uint16_t k = a.step(0, f.mem(), false);
+            if (k & kUp) {
+                sent_up = true;
+                f.pose(read_samus(f.mem()).pose == kPoseMorphBall ? kPoseCrouching : kPoseStanding);
+            }
+        }
+        check(sent_up && read_samus(f.mem()).pose == kPoseStanding, "second press stands her back up");
+        check(a.step(kLeft, f.mem(), false) == kLeft, "control is handed back after unmorphing");
+
+        // Without the Morph Ball it does nothing.
+        f.samus(5, 4, +1, kPoseStanding, false);
+        a.reset();
+        a.request_toggle();
+        check(a.step(kRight, f.mem(), false) == kRight && !a.busy(), "no Morph Ball: button does nothing");
+        // Mod off: running into a tunnel doesn't morph on its own.
+        f.samus(2, 4, +1);
+        for (int i = 0; i < 20; ++i) check(a.step(kRight, f.mem(), false) == kRight, "mod off: no auto morph");
+    }
     if (failures == 0) std::printf("auto_morph: all checks passed\n");
     return failures == 0 ? 0 : 1;
 }
