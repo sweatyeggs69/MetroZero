@@ -18,8 +18,6 @@
 #include <cstdint>
 #include <span>
 
-#include "app/i18n.h"
-
 namespace metrozero::redux {
 
 struct Patch {
@@ -63,11 +61,11 @@ inline constexpr Patch kFastElevators[] = {
 }  // namespace detail
 
 inline constexpr Tweak kTweaks[] = {
-    {"fast_elevators", N_("Faster elevators"), N_("Elevators move twice as fast."), Kind::Rom, detail::kFastElevators},
-    {"accurate_clock", N_("Accurate in-game clock"), N_("A second is 60 frames, so the clock matches real time."), Kind::Rom, detail::kAccurateClock},
-    {"bomb_jump_liquids", N_("Bomb jumps in liquids"), N_("Bombs launch the Morph Ball in water and lava, even without the Gravity Suit."), Kind::Rom, detail::kBombJumpLiquids},
-    {"morph_idle", N_("Morph Ball rests when still"), N_("The Morph Ball only rolls while it is moving."), Kind::Host, {}},
-    {"no_low_health_alarm", N_("No low health alarm"), N_("Turns off the beeping when energy is low."), Kind::Rom, detail::kLowHealthAlarm},
+    {"fast_elevators", "Faster elevators", "Elevators move twice as fast.", Kind::Rom, detail::kFastElevators},
+    {"accurate_clock", "Accurate in-game clock", "A second is 60 frames, so the clock matches real time.", Kind::Rom, detail::kAccurateClock},
+    {"bomb_jump_liquids", "Bomb jumps in liquids", "Bombs launch the Morph Ball in water and lava, even without the Gravity Suit.", Kind::Rom, detail::kBombJumpLiquids},
+    {"morph_idle", "Morph Ball rests when still", "The Morph Ball only rolls while it is moving.", Kind::Host, {}},
+    {"no_low_health_alarm", "No low health alarm", "Turns off the beeping when energy is low.", Kind::Rom, detail::kLowHealthAlarm},
 };
 inline constexpr std::size_t kTweakCount = sizeof(kTweaks) / sizeof(kTweaks[0]);
 
