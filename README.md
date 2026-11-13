@@ -34,6 +34,7 @@ Get the latest version from the [Releases page](https://github.com/sweatyeggs69/
 - **One settings menu (F1)** for display (scaling, widescreen, screen effects) and controls.
 - **Controllers and remapping** for keyboard and gamepads.
 - **Save states**: ten slots with thumbnails, quick save/load (Slot 1 by default) and optional auto-load.
+- **Fast forward and rewind**: hold Tab to speed up (2x to 8x), hold ` to rewind up to two minutes. Both rebindable in F1 > Controls; rewind is off in RetroAchievements hardcore mode.
 - **Widescreen** (16:10 and 16:9) in gameplay, drawn from the room data so the extra columns are real level.
 - **Cheats** (F1 > Cheats/Mods): unlimited health, missiles, super missiles and power bombs. Off in RetroAchievements
   hardcore mode.
