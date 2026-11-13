@@ -21,6 +21,11 @@
 // After she morphs it waits for the direction to be let go before it can fire again.
 //
 // Setting (metrozero::Config): mods.auto_morph (off by default). Off in RetroAchievements hardcore.
+//
+// The same class also runs the Morph button (Settings > Controls > Extra Controls): one press
+// morphs Samus when she is standing, running or crouching on the ground (with the Morph Ball
+// collected), and another press while in the ball stands her back up, by pressing Down twice or
+// Up for the player. It works without the mod, since it only presses buttons the player could.
 #include <cstddef>
 #include <cstdint>
 #include <span>
@@ -133,11 +138,23 @@ class Assist {
 public:
     // Call once per game frame with the buttons about to be sent and memory as the last frame left
     // it. Returns the buttons to send.
-    std::uint16_t step(std::uint16_t keys, const Memory& mem) {
+    // auto_on: the Auto Morph Ball mod is on (the Morph button works either way).
+    std::uint16_t step(std::uint16_t keys, const Memory& mem, bool auto_on = true) {
         const Samus s = read_samus(mem);
         const std::uint16_t dir_key = keys & (kLeft | kRight);
+        if (toggle_requested_ && !busy()) {
+            toggle_requested_ = false;
+            const bool in_ball = s.pose == kPoseMorphing || s.pose == kPoseMorphBall || s.pose == kPoseRolling;
+            if (in_ball) start(Phase::Unmorph, 0);
+            else if (s.morph_ball && s.pose == kPoseCrouching) start(Phase::Morph, 0);
+            else if (s.morph_ball && (s.pose == kPoseStanding || s.pose == kPoseRunning)) start(Phase::Crouch, 0);
+        }
         switch (phase_) {
             case Phase::Watch: {
+                if (!auto_on) {
+                    held_ = 0;
+                    return keys;
+                }
                 const bool lone_dir = (dir_key == kLeft || dir_key == kRight) &&
                                       !(keys & (kUp | kDown | kA | kB | kL));
                 const bool grounded = s.pose == kPoseStanding || s.pose == kPoseRunning;
@@ -160,6 +177,11 @@ public:
                 }
                 if (++timer_ > kStepTimeout) { start(Phase::Cooldown, dir_); return keys; }
                 return tap(keys);
+            case Phase::Unmorph:  // tap Up until she is standing again (crouching on the way)
+                if (s.pose == kPoseStanding || s.pose == kPoseRunning) { start(Phase::Cooldown, 0); return keys; }
+                if (++timer_ > 2 * kStepTimeout) { start(Phase::Cooldown, 0); return keys; }
+                down_ = !down_;
+                return std::uint16_t((keys & ~kDirs) | (down_ ? kUp : 0));
             case Phase::Cooldown:
                 // Hand control back, and wait for the direction to be let go before watching again.
                 if (!(keys & dir_)) start(Phase::Watch, 0);
@@ -167,8 +189,13 @@ public:
         }
         return keys;
     }
-    void reset() { start(Phase::Watch, 0); }
-    bool busy() const { return phase_ == Phase::Crouch || phase_ == Phase::Morph; }
+    void reset() {
+        start(Phase::Watch, 0);
+        toggle_requested_ = false;
+    }
+    // Morph button pressed: morph, or stand back up if already in the ball. Runs on the next step().
+    void request_toggle() { toggle_requested_ = true; }
+    bool busy() const { return phase_ == Phase::Crouch || phase_ == Phase::Morph || phase_ == Phase::Unmorph; }
 
 private:
     // The game only reacts to a new Down press, so Down goes up and down on alternate frames, and
@@ -177,7 +204,7 @@ private:
         down_ = !down_;
         return std::uint16_t((keys & ~kDirs) | (down_ ? kDown : 0));
     }
-    enum class Phase { Watch, Crouch, Morph, Cooldown };
+    enum class Phase { Watch, Crouch, Morph, Unmorph, Cooldown };
     void start(Phase p, std::uint16_t dir) {
         phase_ = p;
         dir_ = dir;
@@ -189,7 +216,8 @@ private:
     std::uint16_t dir_ = 0;  // the direction held into the wall
     int held_ = 0;
     int timer_ = 0;
-    bool down_ = true;  // Down was sent on the last tap() frame
+    bool down_ = true;  // Down (Up when unmorphing) was sent on the last tap() frame
+    bool toggle_requested_ = false;
 };
 
 }  // namespace metrozero::auto_morph

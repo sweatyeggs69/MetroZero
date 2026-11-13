@@ -188,8 +188,8 @@ void display_tab(Config& config) {
 }
 
 // Key bindings tables: a name column, then one column per device, each cell a field that
-// rebinds when activated (Enter, controller A or a click) and clears on Delete, controller X or
-// a right click.
+// rebinds when activated (Enter, the controller's south button or a click) and clears on Delete,
+// the controller's west button (X on Xbox, Y on Nintendo, Square on PlayStation) or a right click.
 using input::Source;
 enum class CellAction { None, Rebind, Clear };
 
@@ -280,7 +280,9 @@ void controls_tab(input::Manager& in, Config& config) {
     ImGui::TextDisabled("How they work");
     help_marker("Missile toggle: press once to arm missiles and again to go back to the beam, "
                 "instead of holding R. In morph ball it arms power bombs, like holding R.\n\n"
-                "Aim diagonally up / down: hold to aim, instead of holding L (and L + Down).");
+                "Aim diagonally up / down: hold to aim, instead of holding L (and L + Down).\n\n"
+                "Morph Ball: press once to morph (on the ground, once you have the Morph Ball) and "
+                "again to stand back up, instead of pressing Down twice and Up.");
     const input::Action act_waiting = in.action_remap_target();
     if (begin_bindings_table("actions", "Action", ImGui::CalcTextSize(input::name(input::Action::AimDown)).x)) {
         for (int i = 0; i < input::kActionCount; ++i) {
