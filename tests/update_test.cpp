@@ -141,6 +141,18 @@ int main() {
     CHECK(!extract_zip(data / "update-unsafe.zip", out / "c", &err));
     CHECK(!fs::exists(out / "evil.txt"));
     CHECK(!extract_zip(data / "missing.zip", out / "d", &err));
+
+    // One file read from a zip in memory (zipped ROMs).
+    std::vector<std::uint8_t> member;
+    CHECK(read_zip_member(data / "update-stored.zip", ".EXE", 1024, &member, &err));
+    CHECK(std::string(member.begin(), member.end()) == "stored entry\n");
+    if (zip_supported()) {
+        CHECK(read_zip_member(data / "update-deflate.zip", ".txt", 1 << 20, &member, &err));
+        CHECK(member.size() == 55000);
+        CHECK(!read_zip_member(data / "update-deflate.zip", ".txt", 1000, &member, &err));  // too large
+    }
+    CHECK(!read_zip_member(data / "update-stored.zip", ".gba", 1024, &member, &err));
+    CHECK(!read_zip_member(data / "missing.zip", ".gba", 1024, &member, &err));
     fs::remove_all(out, ec);
 
     if (failures) {

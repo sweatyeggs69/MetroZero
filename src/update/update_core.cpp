@@ -480,6 +480,72 @@ bool extract_zip(const fs::path& zip, const fs::path& dest, std::string* error) 
     return true;
 }
 
+bool read_zip_member(const fs::path& zip, const std::string& extension, std::size_t max_size,
+                     std::vector<std::uint8_t>* out, std::string* error) {
+    auto fail = [&](const std::string& why) {
+        if (error) *error = why;
+        return false;
+    };
+    std::vector<std::uint8_t> b;
+    {
+        std::ifstream f(zip, std::ios::binary);
+        if (!f) return fail("Couldn't open the zip file.");
+        b.assign(std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>());
+    }
+    if (b.size() < 22) return fail("That is not a valid zip file.");
+    size_t eocd = std::string::npos;
+    for (size_t i = b.size() - 22 + 1; i-- > 0 && b.size() - i <= 22 + 65535;)
+        if (rd32(b, i) == 0x06054b50u) { eocd = i; break; }
+    if (eocd == std::string::npos) return fail("That is not a valid zip file.");
+    size_t count = rd16(b, eocd + 10);
+    size_t cd = rd32(b, eocd + 16);
+    const std::string want = lower(extension);
+    for (size_t k = 0; k < count; ++k) {
+        if (cd + 46 > b.size() || rd32(b, cd) != 0x02014b50u) return fail("The zip file is damaged.");
+        std::uint32_t method = rd16(b, cd + 10), crc = rd32(b, cd + 16);
+        size_t csize = rd32(b, cd + 20), usize = rd32(b, cd + 24);
+        size_t nlen = rd16(b, cd + 28), xlen = rd16(b, cd + 30), clen = rd16(b, cd + 32);
+        size_t local = rd32(b, cd + 42);
+        if (cd + 46 + nlen > b.size()) return fail("The zip file is damaged.");
+        std::string name(reinterpret_cast<const char*>(&b[cd + 46]), nlen);
+        cd += 46 + nlen + xlen + clen;
+        if (name.size() < want.size() || lower(name.substr(name.size() - want.size())) != want) continue;
+        if (csize == 0xFFFFFFFFu || usize == 0xFFFFFFFFu || local == 0xFFFFFFFFu)
+            return fail("The zip file uses a format that isn't supported (zip64).");
+        if (usize > max_size) return fail("The file inside the zip is too large.");
+        if (local + 30 > b.size() || rd32(b, local) != 0x04034b50u) return fail("The zip file is damaged.");
+        size_t data = local + 30 + rd16(b, local + 26) + rd16(b, local + 28);
+        if (data + csize > b.size()) return fail("The zip file is cut short.");
+        std::vector<std::uint8_t> bytes;
+        if (method == 0) {
+            if (csize != usize) return fail("The zip file is damaged.");
+            bytes.assign(b.begin() + std::ptrdiff_t(data), b.begin() + std::ptrdiff_t(data + csize));
+        } else if (method == 8) {
+#if METROZERO_HAVE_ZLIB
+            bytes.resize(usize);
+            z_stream z{};
+            if (inflateInit2(&z, -MAX_WBITS) != Z_OK) return fail("Couldn't unpack the zip file.");
+            z.next_in = const_cast<Bytef*>(&b[data]);
+            z.avail_in = uInt(csize);
+            z.next_out = bytes.empty() ? nullptr : bytes.data();
+            z.avail_out = uInt(usize);
+            int rc = inflate(&z, Z_FINISH);
+            size_t produced = usize - z.avail_out;
+            inflateEnd(&z);
+            if (rc != Z_STREAM_END || produced != usize) return fail("Couldn't unpack " + name + " from the zip file.");
+#else
+            return fail("This build can't unpack compressed zip files.");
+#endif
+        } else {
+            return fail("The zip file uses an unsupported compression method.");
+        }
+        if (crc32_of(bytes.data(), bytes.size()) != crc) return fail("The zip file is damaged (" + name + ").");
+        *out = std::move(bytes);
+        return true;
+    }
+    return fail("There is no " + extension + " file in that zip.");
+}
+
 // ---- release notes --------------------------------------------------------------------------
 
 namespace {

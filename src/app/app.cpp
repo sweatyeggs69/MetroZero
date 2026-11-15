@@ -258,7 +258,11 @@ bool App::init_window() {
     ImGui_ImplSDLRenderer3_Init(renderer_);
     menu_pad::init();  // controllers reach the menus through handle_event, not the backend's polling
     // Fonts and style are set up by new_ui_frame(), at the window's scale.
-    if (config_.get_string("display.fullscreen", "0") == "1") SDL_SetWindowFullscreen(window_, true);
+    // RecompLauncher's Big Picture mode (a controller on the couch) starts full screen; the
+    // setting itself is left alone.
+    const char* rl_mode = SDL_getenv("RECOMPLAUNCHER_MODE");
+    const bool big_picture = rl_mode && SDL_strcmp(rl_mode, "bigpicture") == 0;
+    if (big_picture || config_.get_string("display.fullscreen", "0") == "1") SDL_SetWindowFullscreen(window_, true);
     toast::set_renderer(renderer_);
     presenter_ = std::make_unique<Presenter>(renderer_, settings_io(config_));
     // Extra controller layouts (SDL's gamecontrollerdb.txt format) for controllers SDL doesn't know.
@@ -380,7 +384,7 @@ void App::accept_rom(const fs::path& path) {
 }
 
 void App::open_rom_dialog() {
-    static const SDL_DialogFileFilter filters[] = {{"Game Boy Advance ROM", "gba"}, {"All files", "*"}};
+    static const SDL_DialogFileFilter filters[] = {{"Game Boy Advance ROM", "gba;zip"}, {"All files", "*"}};
     std::string start = rom_.ok ? rom_.path.parent_path().string() : std::string();
     SDL_ShowOpenFileDialog(
         [](void* self, const char* const* files, int) {

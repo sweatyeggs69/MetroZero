@@ -1,8 +1,10 @@
 #include "rom.h"
 
+#include <cstring>
 #include <fstream>
 
 #include "sha1.h"
+#include "update/update_core.h"
 
 namespace metrozero {
 namespace fs = std::filesystem;
@@ -26,18 +28,35 @@ RomLoadResult load_rom(const fs::path& path) {
         r.error = "could not open " + path.string();
         return r;
     }
-    f.seekg(0, std::ios::end);
-    auto size = std::streamoff(f.tellg());
-    f.seekg(0, std::ios::beg);
-    if (size < 0xC0 || size > 32 * 1024 * 1024) {
-        r.error = "file size " + std::to_string(size) + " is not a plausible GBA ROM";
-        return r;
-    }
-    r.rom.data.resize(std::size_t(size));
-    f.read(reinterpret_cast<char*>(r.rom.data.data()), size);
-    if (!f) {
-        r.error = "read failed";
-        return r;
+    // A zipped ROM: use the first .gba file inside it.
+    char magic[4] = {};
+    f.read(magic, 4);
+    if (f && std::memcmp(magic, "PK\x03\x04", 4) == 0) {
+        f.close();
+        std::string err;
+        if (!update::read_zip_member(path, ".gba", 32 * 1024 * 1024, &r.rom.data, &err)) {
+            r.error = err;
+            return r;
+        }
+        if (r.rom.data.size() < 0xC0) {
+            r.error = "file size " + std::to_string(r.rom.data.size()) + " is not a plausible GBA ROM";
+            return r;
+        }
+    } else {
+        f.clear();
+        f.seekg(0, std::ios::end);
+        auto size = std::streamoff(f.tellg());
+        f.seekg(0, std::ios::beg);
+        if (size < 0xC0 || size > 32 * 1024 * 1024) {
+            r.error = "file size " + std::to_string(size) + " is not a plausible GBA ROM";
+            return r;
+        }
+        r.rom.data.resize(std::size_t(size));
+        f.read(reinterpret_cast<char*>(r.rom.data.data()), size);
+        if (!f) {
+            r.error = "read failed";
+            return r;
+        }
     }
 
     const auto& d = r.rom.data;

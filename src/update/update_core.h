@@ -60,6 +60,11 @@ std::string checksum_for(const std::string& sums_text, const std::string& file);
 // each entry's CRC-32. On failure returns false with a user-facing reason.
 bool extract_zip(const std::filesystem::path& zip, const std::filesystem::path& dest, std::string* error);
 bool zip_supported();
+// Reads the first file in `zip` whose name ends in `extension` (like ".gba", any case) into
+// `out`, without unpacking anything to disk. Same formats and CRC-32 check as extract_zip; files
+// over `max_size` bytes are refused. On failure returns false with a user-facing reason.
+bool read_zip_member(const std::filesystem::path& zip, const std::string& extension, std::size_t max_size,
+                     std::vector<std::uint8_t>* out, std::string* error);
 
 // ---- release notes ----
 // Release notes (GitHub Markdown) as simple display lines.

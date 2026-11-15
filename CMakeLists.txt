@@ -75,6 +75,8 @@ if(MSVC)
 else()
     target_compile_options(metrozero_update_core PRIVATE -Wall -Wextra)
 endif()
+# Zipped ROMs are read with the same zip code.
+target_link_libraries(metrozero_core PUBLIC metrozero_update_core)
 
 # Display post-processing (scaling layout, GBA colors, frame blending, overlays). No SDL.
 add_library(metrozero_display STATIC src/options/display.cpp)
