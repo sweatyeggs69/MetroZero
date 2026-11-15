@@ -399,8 +399,9 @@ void Gba::ppu_render_line(int y) {
     finish();
 }
 
-void Gba::set_wide_margin(int margin) {
+void Gba::set_wide_margin(int margin, bool wide_sprites) {
     margin = std::clamp(margin, 0, kMaxWideMargin);
+    wide_sprite_patch(wide_sprites ? margin : 0);
     if (margin == wide_margin_) return;
     wide_margin_ = margin;
     if (margin) wide_frame_.assign(std::size_t(kScreenWidth + 2 * margin) * kScreenHeight, 0);

@@ -533,7 +533,7 @@ void App::update_emulation() {
         }
         pixels = game_->framebuffer();
     } else if (screen_ == Screen::Game && game_) {
-        game_->set_wide_margin(display::wide_margin(presenter_->settings().aspect));
+        game_->set_wide_margin(display::wide_margin(presenter_->settings().aspect), cheats_allowed());
         while (script_pos_ < script_.size() && script_[script_pos_].first <= game_frames_)
             script_keys_ = script_[script_pos_++].second;
         std::uint16_t keys = std::uint16_t(controls_->poll_frame() | script_keys_);
@@ -1849,7 +1849,7 @@ int App::run() {
             presenter_->reload();
             controls_->reload();
             if (audio_) SDL_ClearAudioStream(audio_);
-            if (game_) game_->set_wide_margin(display::wide_margin(presenter_->settings().aspect));
+            if (game_) game_->set_wide_margin(display::wide_margin(presenter_->settings().aspect), cheats_allowed());
         }
         menu_was_open_ = menu;
 

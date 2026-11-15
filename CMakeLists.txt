@@ -5,7 +5,7 @@ if(APPLE AND NOT CMAKE_OSX_DEPLOYMENT_TARGET)
     set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "Minimum macOS version")
 endif()
 
-project(metrozero LANGUAGES C CXX VERSION 1.2.1)
+project(metrozero LANGUAGES C CXX VERSION 1.3.0)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -354,6 +354,9 @@ if(METROZERO_BUILD_TESTS)
     target_link_libraries(metrozero_update_test PRIVATE metrozero_update_core)
     target_compile_definitions(metrozero_update_test PRIVATE METROZERO_TEST_DATA="${PROJECT_SOURCE_DIR}/tests/data")
     add_test(NAME updates COMMAND metrozero_update_test)
+    add_executable(metrozero_wide_sprites_test tests/wide_sprites_test.cpp)
+    target_link_libraries(metrozero_wide_sprites_test PRIVATE metrozero_gba)
+    add_test(NAME wide_sprites COMMAND metrozero_wide_sprites_test)
     add_executable(metrozero_state_test tests/state_test.cpp)
     target_link_libraries(metrozero_state_test PRIVATE metrozero_gba metrozero_core)
     # Uses the user's own ROM when it sits in the source folder (it is never committed).
