@@ -103,10 +103,23 @@ jobs:
             -not (Test-Path (Join-Path "$env:SystemRoot\System32" $_))
           }
           if ($bad) { Write-Host "::error title=Not self-contained::MetroZero.exe imports non-system DLLs: $($bad -join ', ')"; exit 1 }
+      - name: Zip for RecompLauncher
+        # The same exe in a zip with recomplauncher.json next to it, the file RecompLauncher
+        # installs on Windows. The in-app updater keeps using the bare exe.
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem build -Filter "MetroZero-*-Windows-x64.exe" | Select-Object -First 1
+          $stage = Join-Path $env:RUNNER_TEMP "zip"
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          Copy-Item $exe.FullName (Join-Path $stage "MetroZero.exe")
+          Copy-Item recomplauncher.json $stage
+          Compress-Archive -Path "$stage\*" -DestinationPath ($exe.FullName -replace '\.exe$', '.zip') -Force
       - uses: actions/upload-artifact@v6
         with:
           name: MetroZero-Windows
-          path: build/MetroZero-*-Windows-x64.exe
+          path: |
+            build/MetroZero-*-Windows-x64.exe
+            build/MetroZero-*-Windows-x64.zip
           if-no-files-found: error
 
   linux:
@@ -214,7 +227,7 @@ jobs:
           path: dist
           merge-multiple: true
       - name: Check release files
-        # Only the three built apps (plus the RecompLauncher metadata, when the repository has it)
+        # Only the built apps (plus the RecompLauncher metadata, when the repository has it)
         # are published; CI never has game files.
         run: |
           set -e
@@ -222,10 +235,10 @@ jobs:
           ls -la dist
           shopt -s nullglob
           apps=(dist/MetroZero-*)
-          [ "${#apps[@]}" -eq 3 ] || { echo "::error::expected exactly 3 app files in dist/"; exit 1; }
+          [ "${#apps[@]}" -eq 4 ] || { echo "::error::expected exactly 4 app files in dist/"; exit 1; }
           for f in dist/*; do
             case "$(basename "$f")" in
-              MetroZero-*-macOS.dmg|MetroZero-*-Windows-x64.exe|MetroZero-*-Linux-x64.AppImage|recomplauncher.json) ;;
+              MetroZero-*-macOS.dmg|MetroZero-*-Windows-x64.exe|MetroZero-*-Windows-x64.zip|MetroZero-*-Linux-x64.AppImage|recomplauncher.json) ;;
               *) echo "::error::unexpected file in dist/: $f"; exit 1 ;;
             esac
           done
@@ -235,6 +248,7 @@ jobs:
           files: |
             dist/MetroZero-*-macOS.dmg
             dist/MetroZero-*-Windows-x64.exe
+            dist/MetroZero-*-Windows-x64.zip
             dist/MetroZero-*-Linux-x64.AppImage
             dist/SHA256SUMS.txt
             dist/recomplauncher.json

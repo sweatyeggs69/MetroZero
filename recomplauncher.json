@@ -7,7 +7,7 @@
     "kind": "iso",
     "label": "Your own Game Boy Advance ROM (.gba) of Metroid: Zero Mission, USA release (AGB-BMXE), revision 0.",
     "dumps": [
-      { "name": "USA", "size": 8388608, "crc32": "6C75479C" }
+      { "name": "USA", "size": 8388608, "crc32": "5C61A844" }
     ]
   },
   "start": {
@@ -111,6 +111,50 @@
         { "label": "Ghost", "set": { "display.blend": "Ghost" } }
       ],
       "defaults": { "display.blend": "Off" }
+    },
+    {
+      "id": "menu_size",
+      "label": "Menu size",
+      "help": "How big the launcher and menus are. Auto follows your screen and the window's size.",
+      "choices": [
+        { "label": "Auto", "set": { "display.ui_size": "Auto" } },
+        { "label": "100%", "set": { "display.ui_size": "100%" } },
+        { "label": "125%", "set": { "display.ui_size": "125%" } },
+        { "label": "150%", "set": { "display.ui_size": "150%" } },
+        { "label": "175%", "set": { "display.ui_size": "175%" } },
+        { "label": "200%", "set": { "display.ui_size": "200%" } }
+      ],
+      "defaults": { "display.ui_size": "Auto" }
+    },
+    {
+      "id": "fast_forward",
+      "label": "Fast forward speed",
+      "help": "How fast the game runs while you hold fast forward (Tab, or the button you bound).",
+      "choices": [
+        { "label": "2x", "set": { "speed.fast_forward": "2" } },
+        { "label": "4x", "set": { "speed.fast_forward": "4" } }
+      ],
+      "defaults": { "speed.fast_forward": "2" }
+    },
+    {
+      "id": "fast_forward_sound",
+      "label": "Sound while fast forwarding",
+      "help": "Off keeps fast forward silent. On plays the game's sound faster along with it.",
+      "choices": [
+        { "label": "Off", "set": { "speed.fast_forward_sound": "false" } },
+        { "label": "On", "set": { "speed.fast_forward_sound": "true" } }
+      ],
+      "defaults": { "speed.fast_forward_sound": "false" }
+    },
+    {
+      "id": "rewind",
+      "label": "Rewind",
+      "help": "Keeps the last 10 seconds of play so you can step back. Off in RetroAchievements hardcore mode.",
+      "choices": [
+        { "label": "On", "set": { "rewind.enabled": "true" } },
+        { "label": "Off", "set": { "rewind.enabled": "false" } }
+      ],
+      "defaults": { "rewind.enabled": "true" }
     },
     {
       "id": "sound",

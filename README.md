@@ -24,13 +24,13 @@
 
 ## Download
 
-<a href="https://recomplauncher.com/game/metrozero"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg"></a>
+<a href="https://recomplauncher.com/game/metrozero"><picture><source media="(prefers-color-scheme: dark)" srcset="https://recomplauncher.com/assets/press/launcher/badge-light.svg"><img alt="Get it on RecompLauncher" src="https://recomplauncher.com/assets/press/launcher/badge-dark.svg" height="48"></picture></a>
 
 Or get the latest version for your system from the [Releases page](https://github.com/sweatyeggs69/MetroZero/releases/latest).
 
 ## Getting started
 
-1. **Open MetroZero** and click **Choose ROM...** to pick your dump. Only the USA release (game code
+1. **Open MetroZero** and click **Choose ROM...** to pick your dump (the .gba file, or a .zip with it inside). Only the USA release (game code
    `BMXE`, revision 0) is supported; other regions, revisions, hacks and damaged dumps are refused.
    MetroZero only remembers where the file is. It never copies, uploads or changes it.
 2. **BIOS (optional).** No BIOS is needed. If you own a GBA BIOS dump, pick it in Settings > Game > BIOS
