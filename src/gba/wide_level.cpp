@@ -191,8 +191,8 @@ void Gba::wide_level_detect() {
     wide_main_bg_ = bg_of_layer[kMainLayer];
     // The HUD (energy, missiles, minimap) is drawn with priority 0 objects in the top rows;
     // unused objects are parked at x = 255, which is visible in a wide view. Keep both in the
-    // 240 view (ppu_render_objects). Other priority 0 objects, such as the Kraid and Ridley statues, are
-    // part of the room and continue into the sides.
+    // 240 view (ppu_render_objects). Other priority 0 objects, such as the Kraid and Ridley
+    // statues, are part of the room and continue into the sides.
     wide_hud_prio_ = 0;
     // Block layers that did not match would show stale ring columns: hide their sides.
     for (int layer = 0; layer < 3; ++layer)
