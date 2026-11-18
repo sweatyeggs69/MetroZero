@@ -219,6 +219,7 @@ bool Gba::load_state(const std::vector<u8>& data, std::string* error) {
     wide_level_ = {};
     wide_scene_ = false;
     wide_main_bg_ = -1;
+    wide_view_x0_ = wide_view_x1_ = 0;
     wide_hud_prio_ = -1;
     return true;
 }

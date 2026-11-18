@@ -319,13 +319,13 @@ void Gba::ppu_render_line(int y) {
         }
     }
 
-    // Side columns past the edge of the room (main level layer) stay black.
+    // Side columns past the part of the room the camera may show (main level layer) stay black.
     auto outside_level = [&](int x) {
         if (wide_main_bg_ < 0) return false;
         const WideLevel& L = wide_level_[wide_main_bg_];
         const s32 ax = s32(x - m) + s32(rd16(&io_[0x10 + 4 * wide_main_bg_]) & 0x1FF) + L.cam_x;
         const s32 ay = s32(y) + s32(rd16(&io_[0x12 + 4 * wide_main_bg_]) & 0x1FF) + L.cam_y;
-        return ax < 0 || ay < 0 || ax >= L.tiles_w * 8 || ay >= L.tiles_h * 8;
+        return ax < wide_view_x0_ || ax >= wide_view_x1_ || ay < 0 || ay >= L.tiles_h * 8;
     };
 
     u32 bgprio[4];
