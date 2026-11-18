@@ -23,7 +23,6 @@
 // background wraps as on hardware, and a block layer that does not match is hidden rather
 // than showing stale VRAM. Only addresses and layout descriptions belong here; never copy
 // game data into the repo.
-#include <algorithm>
 #include <iterator>
 
 #include "gba.h"
@@ -38,13 +37,6 @@ constexpr int kMainLayer = 1;
 constexpr u32 kRoomEntry = 0x030000BC;  // gCurrentRoomEntry: u8 tileset, u8 bg0Prop, ...
 constexpr u16 kBgPropCloseUp = 0x41;    // BG_PROP_CLOSE_UP
 constexpr u8 kBgPropRle = 0x10;         // BG_PROP_RLE_COMPRESSED: the layer is a block layer
-// gCurrentScrolls: 2 x 12 bytes {u8 within; u16 xEnd; u16 xStart; u16 yStart; u16 yEnd}, x in
-// quarter pixels. within == 2 marks a scroll the camera currently follows (ScrollUpdateCurrent).
-constexpr u32 kScrolls = 0x03000118;
-constexpr u32 kScrollSize = 12;
-constexpr u8 kScrollWithin = 2;
-// The camera never shows the first and last 2 block columns of a room (SCREEN_X_BLOCK_PADDING).
-constexpr s32 kRoomPadding = 32;
 // BG3CNT while a door transition runs: 512x256, screen block 6, char block 1, priority 0.
 constexpr u16 kDoorTransitionBg3Cnt = 0x4604;
 
@@ -197,36 +189,10 @@ void Gba::wide_level_detect() {
         return;
     }
     wide_main_bg_ = bg_of_layer[kMainLayer];
-    // How far the sides may show. The game keeps the camera inside the current scroll areas
-    // (gCurrentScrolls), and never shows the room's 2 outer block columns. Past those edges
-    // are the room's hidden parts: secret passages that only open up once Samus is inside,
-    // the next room's door, half-finished scenery. Show the sides only within the scroll
-    // areas, widened to the 240 view itself so that the sides follow while the camera pans
-    // from one scroll area to the next (issue #22).
-    {
-        const WideLevel& L = wide_level_[wide_main_bg_];
-        const s32 view_x = s32(u32(io_[0x10 + 4 * wide_main_bg_] | (io_[0x11 + 4 * wide_main_bg_] << 8)) & 0x1FF) + L.cam_x;
-        s32 x0 = kRoomPadding, x1 = L.tiles_w * 8 - kRoomPadding;
-        bool any = false;
-        s32 sx0 = 0, sx1 = 0;
-        for (u32 i = 0; i < 2; ++i) {
-            const u32 at = kScrolls + i * kScrollSize;
-            if ((wide_ram16(at) & 0xFF) != kScrollWithin) continue;
-            const s32 start = s32(wide_ram16(at + 4)) >> 2, end = s32(wide_ram16(at + 2)) >> 2;
-            if (end <= start) continue;
-            sx0 = any ? std::min(sx0, start) : start;
-            sx1 = any ? std::max(sx1, end) : end;
-            any = true;
-        }
-        if (any) {
-            x0 = std::max(x0, sx0);
-            x1 = std::min(x1, sx1);
-        }
-        wide_view_x0_ = std::min(x0, view_x);
-        wide_view_x1_ = std::max(x1, view_x + kScreenWidth);
-    }
-    // The HUD (energy, missiles, minimap) is drawn with priority 0 objects; unused objects
-    // are parked at x = 255, which is visible in a wide view. Keep both in the 240 view.
+    // The HUD (energy, missiles, minimap) is drawn with priority 0 objects in the top rows;
+    // unused objects are parked at x = 255, which is visible in a wide view. Keep both in the
+    // 240 view (ppu_render_objects). Other priority 0 objects, such as the Kraid and Ridley statues, are
+    // part of the room and continue into the sides.
     wide_hud_prio_ = 0;
     // Block layers that did not match would show stale ring columns: hide their sides.
     for (int layer = 0; layer < 3; ++layer)

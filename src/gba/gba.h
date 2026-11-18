@@ -284,8 +284,7 @@ private:
     std::array<WideLevel, 4> wide_level_{};  // per BG
     bool wide_scene_ = false;  // widen this frame at all (otherwise the sides stay black)
     int wide_main_bg_ = -1;    // in a wide scene: side columns outside this BG's level are black
-    s32 wide_view_x0_ = 0, wide_view_x1_ = 0;  // ...and outside [x0, x1) in its level pixels
-    int wide_hud_prio_ = -1;   // in a wide scene: objects of this priority stay in the 240 view
+    int wide_hud_prio_ = -1;   // in a wide scene: HUD objects (this priority, top rows or parked) stay in the 240 view
     bool frame_done_ = false;
     u64 frame_count_ = 0;
 

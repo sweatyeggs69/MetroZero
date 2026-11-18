@@ -177,6 +177,9 @@ void Gba::ppu_render_bitmap(int mode, u16* color, u8* opaque) {
     }
 }
 
+// Bottom of the HUD band (energy, missiles, minimap), in screen rows.
+constexpr int kHudBottom = 32;
+
 void Gba::ppu_render_objects(int y) {
     obj_prio_.fill(4);
     obj_semi_.fill(0);
@@ -214,9 +217,13 @@ void Gba::ppu_render_objects(int y) {
             pc = s16(rd16(&oam_[p + 22]));
             pd = s16(rd16(&oam_[p + 30]));
         }
-        // HUD objects (and objects the game parks just past the right edge) stay in the
-        // original view, which is all the game expects to be seen.
-        const bool clip240 = wide_scene_ && int(prio) == wide_hud_prio_;
+        // HUD objects stay in the original view, which is all the game expects to be seen:
+        // the HUD's priority, either in the top rows (energy, missiles, minimap; oy is already
+        // wrapped, so a piece hanging down from the bottom edge counts) or parked by the game
+        // at x = 255 just past the right edge. Other objects of that priority, such as the
+        // Kraid and Ridley statues, belong to the room and continue into the sides (issue #22).
+        const bool clip240 = wide_scene_ && int(prio) == wide_hud_prio_ &&
+                             ((a1 & 0x1FF) == 255 || oy + bh <= kHudBottom);
         for (int bx = 0; bx < bw; ++bx) {
             int sx = ox + bx + wide_margin_;  // index into the (possibly wide) line
             if (sx < 0 || sx >= kScreenWidth + 2 * wide_margin_) continue;
@@ -319,13 +326,13 @@ void Gba::ppu_render_line(int y) {
         }
     }
 
-    // Side columns past the part of the room the camera may show (main level layer) stay black.
+    // Side columns past the edge of the room (main level layer) stay black.
     auto outside_level = [&](int x) {
         if (wide_main_bg_ < 0) return false;
         const WideLevel& L = wide_level_[wide_main_bg_];
         const s32 ax = s32(x - m) + s32(rd16(&io_[0x10 + 4 * wide_main_bg_]) & 0x1FF) + L.cam_x;
         const s32 ay = s32(y) + s32(rd16(&io_[0x12 + 4 * wide_main_bg_]) & 0x1FF) + L.cam_y;
-        return ax < wide_view_x0_ || ax >= wide_view_x1_ || ay < 0 || ay >= L.tiles_h * 8;
+        return ax < 0 || ay < 0 || ax >= L.tiles_w * 8 || ay >= L.tiles_h * 8;
     };
 
     u32 bgprio[4];
