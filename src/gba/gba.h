@@ -284,6 +284,10 @@ private:
     std::array<WideLevel, 4> wide_level_{};  // per BG
     bool wide_scene_ = false;  // widen this frame at all (otherwise the sides stay black)
     int wide_main_bg_ = -1;    // in a wide scene: side columns outside this BG's level are black
+    // In a wide scene: the screen columns [x0, x1) of the part of the room the camera can
+    // reach. Side columns past them repeat the nearest block column inside (wide_fold).
+    s32 wide_reach_x0_ = -kMaxWideMargin, wide_reach_x1_ = kScreenWidth + kMaxWideMargin;
+    s32 wide_fold(s32 x) const;
     int wide_hud_prio_ = -1;   // in a wide scene: HUD objects (this priority, top rows or parked) stay in the 240 view
     bool frame_done_ = false;
     u64 frame_count_ = 0;

@@ -101,6 +101,11 @@ void Gba::ppu_render_text_bg(int bg, int y, u16* color, u8* opaque) {
             // Outside the original view the VRAM ring holds stale columns: rebuild the
             // entry from the level layout in RAM instead (wide_level.cpp), or hide it.
             const WideLevel& L = wide_level_[bg];
+            if (L.mode == WideMode::Level) {
+                // Past what the camera can reach, repeat the room's nearest block column.
+                xx = wide_fold(xx);
+                sx = (u32(xx) + hofs) & wmask;
+            }
             const s32 ax = s32(xx) + s32(hofs) + L.cam_x;
             const s32 ay = s32(yy) + s32(vofs) + L.cam_y;
             if (L.mode == WideMode::Level && ax >= 0 && ay >= 0 && ax < L.tiles_w * 8 && ay < L.tiles_h * 8) {
@@ -373,6 +378,9 @@ void Gba::ppu_render_line(int y) {
             else if (objwin && obj_window_[x]) mask = m_obj;
             else mask = m_out;
         }
+        // Objects past what the camera can reach (the next room's door, a secret's items) are
+        // not drawn; the background there repeats the room's edge (wide_fold).
+        if (wide_scene && (x - m < wide_reach_x0_ || x - m >= wide_reach_x1_)) mask &= ~0x10;
         int layer[2] = {5, 5};
         u16 col[2] = {backdrop, backdrop};
         int found = 0;
