@@ -288,6 +288,9 @@ private:
     // reach. Side columns past them repeat the nearest block column inside (wide_fold).
     s32 wide_reach_x0_ = -kMaxWideMargin, wide_reach_x1_ = kScreenWidth + kMaxWideMargin;
     s32 wide_fold(s32 x) const;
+    // Per side (left, right): fill the columns past the reach with a solid color instead.
+    std::array<bool, 2> wide_fill_on_{};
+    std::array<u16, 2> wide_fill_{};
     int wide_hud_prio_ = -1;   // in a wide scene: HUD objects (this priority, top rows or parked) stay in the 240 view
     bool frame_done_ = false;
     u64 frame_count_ = 0;

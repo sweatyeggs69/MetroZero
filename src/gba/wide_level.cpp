@@ -48,6 +48,13 @@ constexpr u8 kRoomHasScrolls = 3;
 // The camera never shows the first and last 2 block columns of a room (SCREEN_X_BLOCK_PADDING).
 constexpr s32 kRoomPadding = 32;
 constexpr s32 kBlock = 16;
+constexpr u32 kCurrentArea = 0x03000054;  // gCurrentArea (u8), then gCurrentRoom (u8)
+// Rooms whose edge past the camera's reach is detailed art that looks wrong repeated, so the
+// sides there get a solid color instead: {area, room}.
+struct AreaRoom { u8 area, room; };
+constexpr AreaRoom kSolidEdgeRooms[] = {
+    {5, 9},  // Crateria: the bird statue's head next to the Power Grip climb (issue #22)
+};
 // BG3CNT while a door transition runs: 512x256, screen block 6, char block 1, priority 0.
 constexpr u16 kDoorTransitionBg3Cnt = 0x4604;
 
@@ -80,6 +87,7 @@ void Gba::wide_level_detect() {
     wide_hud_prio_ = -1;
     wide_reach_x0_ = -kMaxWideMargin;
     wide_reach_x1_ = kScreenWidth + kMaxWideMargin;
+    wide_fill_on_ = {};
     if (!wide_margin_) return;
     const u16 dispcnt = u16(io_[0] | (io_[1] << 8));
     if ((dispcnt & 7) != 0) return;
@@ -206,8 +214,10 @@ void Gba::wide_level_detect() {
     // minus its 2 outer block columns, which the camera never shows. Past that are the
     // room's hidden parts: secret passages that only open up once Samus is inside, the next
     // room's door, unfinished scenery (issue #22). The side columns there repeat the nearest
-    // block column inside instead (wide_fold), usually a wall. The reach always includes the
-    // 240 view itself, so the sides follow while the camera pans from one area to the next.
+    // block column inside instead (wide_fold), usually a wall. In the rooms listed in
+    // kSolidEdgeRooms the edge is detailed art that looked wrong repeated, so the sides there
+    // get a solid color instead: the most common color of the edge column in the last frame. The reach always includes the 240
+    // view itself, so the sides follow while the camera pans from one area to the next.
     {
         const WideLevel& L = wide_level_[wide_main_bg_];
         const s32 view_x =
@@ -234,6 +244,39 @@ void Gba::wide_level_detect() {
         x1 = x1 / kBlock * kBlock;
         wide_reach_x0_ = std::min(x0, view_x) - view_x;
         wide_reach_x1_ = std::max(x1, view_x + kScreenWidth) - view_x;
+        const int m = wide_margin_, width = kScreenWidth + 2 * m;
+        bool solid = false;
+        const u16 area_room = wide_ram16(kCurrentArea);
+        for (const AreaRoom& r : kSolidEdgeRooms)
+            solid = solid || (r.area == (area_room & 0xFF) && r.room == (area_room >> 8));
+        // Most common color of the edge block column in the last frame, below the HUD rows.
+        auto common = [&](s32 first) {
+            std::array<u16, kBlock * kScreenHeight> px{};
+            std::size_t n = 0;
+            if (wide_frame_.size() == std::size_t(width * kScreenHeight))
+                for (int y = 32; y < kScreenHeight; ++y)
+                    for (s32 c = first; c < first + kBlock; ++c)
+                        if (c + m >= 0 && c + m < width) px[n++] = wide_frame_[std::size_t(y * width + c + m)];
+            if (!n) return u16(0);
+            std::sort(px.begin(), px.begin() + long(n));
+            u16 best = px[0];
+            std::size_t best_run = 0;
+            for (std::size_t i = 0; i < n;) {
+                std::size_t j = i;
+                while (j < n && px[j] == px[i]) ++j;
+                if (j - i > best_run) best_run = j - i, best = px[i];
+                i = j;
+            }
+            return best;
+        };
+        if (wide_reach_x0_ > -m) {
+            wide_fill_on_[0] = solid;
+            if (wide_fill_on_[0]) wide_fill_[0] = common(wide_reach_x0_);
+        }
+        if (wide_reach_x1_ < kScreenWidth + m) {
+            wide_fill_on_[1] = solid;
+            if (wide_fill_on_[1]) wide_fill_[1] = common(wide_reach_x1_ - kBlock);
+        }
     }
     // The HUD (energy, missiles, minimap) is drawn with priority 0 objects in the top rows;
     // unused objects are parked at x = 255, which is visible in a wide view. Keep both in the

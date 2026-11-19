@@ -102,7 +102,8 @@ void Gba::ppu_render_text_bg(int bg, int y, u16* color, u8* opaque) {
             // entry from the level layout in RAM instead (wide_level.cpp), or hide it.
             const WideLevel& L = wide_level_[bg];
             if (L.mode == WideMode::Level) {
-                // Past what the camera can reach, repeat the room's nearest block column.
+                // Past what the camera can reach, repeat the room's nearest block column
+                // (or a solid color, see below).
                 xx = wide_fold(xx);
                 sx = (u32(xx) + hofs) & wmask;
             }
@@ -366,6 +367,13 @@ void Gba::ppu_render_line(int y) {
         if (m && (x < m || x >= m + kScreenWidth)) {
             if (!wide_scene || outside_level(x)) {
                 out[x] = 0;
+                continue;
+            }
+            // Past what the camera can reach, where repeating the edge would not look like a
+            // wall (wide_level_detect): a solid color taken from the room's edge.
+            const int side = x - m < wide_reach_x0_ ? 0 : x - m >= wide_reach_x1_ ? 1 : -1;
+            if (side >= 0 && wide_fill_on_[side]) {
+                out[x] = wide_fill_[side];
                 continue;
             }
         }

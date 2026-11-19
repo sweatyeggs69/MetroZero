@@ -221,6 +221,7 @@ bool Gba::load_state(const std::vector<u8>& data, std::string* error) {
     wide_main_bg_ = -1;
     wide_reach_x0_ = -kMaxWideMargin;
     wide_reach_x1_ = kScreenWidth + kMaxWideMargin;
+    wide_fill_on_ = {};
     wide_hud_prio_ = -1;
     return true;
 }
