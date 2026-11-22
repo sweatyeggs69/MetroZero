@@ -101,6 +101,12 @@ void Gba::ppu_render_text_bg(int bg, int y, u16* color, u8* opaque) {
             // Outside the original view the VRAM ring holds stale columns: rebuild the
             // entry from the level layout in RAM instead (wide_level.cpp), or hide it.
             const WideLevel& L = wide_level_[bg];
+            if (L.mode == WideMode::Level) {
+                // Past what the camera can reach, repeat the room's nearest block column
+                // (or a solid color, see below).
+                xx = wide_fold(xx);
+                sx = (u32(xx) + hofs) & wmask;
+            }
             const s32 ax = s32(xx) + s32(hofs) + L.cam_x;
             const s32 ay = s32(yy) + s32(vofs) + L.cam_y;
             if (L.mode == WideMode::Level && ax >= 0 && ay >= 0 && ax < L.tiles_w * 8 && ay < L.tiles_h * 8) {
@@ -177,6 +183,9 @@ void Gba::ppu_render_bitmap(int mode, u16* color, u8* opaque) {
     }
 }
 
+// Bottom of the HUD band (energy, missiles, minimap), in screen rows.
+constexpr int kHudBottom = 32;
+
 void Gba::ppu_render_objects(int y) {
     obj_prio_.fill(4);
     obj_semi_.fill(0);
@@ -214,9 +223,13 @@ void Gba::ppu_render_objects(int y) {
             pc = s16(rd16(&oam_[p + 22]));
             pd = s16(rd16(&oam_[p + 30]));
         }
-        // HUD objects (and objects the game parks just past the right edge) stay in the
-        // original view, which is all the game expects to be seen.
-        const bool clip240 = wide_scene_ && int(prio) == wide_hud_prio_;
+        // HUD objects stay in the original view, which is all the game expects to be seen:
+        // the HUD's priority, either in the top rows (energy, missiles, minimap; oy is already
+        // wrapped, so a piece hanging down from the bottom edge counts) or parked by the game
+        // at x = 255 just past the right edge. Other objects of that priority, such as the
+        // Kraid and Ridley statues, belong to the room and continue into the sides (issue #22).
+        const bool clip240 = wide_scene_ && int(prio) == wide_hud_prio_ &&
+                             ((a1 & 0x1FF) == 255 || oy + bh <= kHudBottom);
         for (int bx = 0; bx < bw; ++bx) {
             int sx = ox + bx + wide_margin_;  // index into the (possibly wide) line
             if (sx < 0 || sx >= kScreenWidth + 2 * wide_margin_) continue;
@@ -356,6 +369,13 @@ void Gba::ppu_render_line(int y) {
                 out[x] = 0;
                 continue;
             }
+            // Past what the camera can reach, where repeating the edge would not look like a
+            // wall (wide_level_detect): a solid color taken from the room's edge.
+            const int side = x - m < wide_reach_x0_ ? 0 : x - m >= wide_reach_x1_ ? 1 : -1;
+            if (side >= 0 && wide_fill_on_[side]) {
+                out[x] = wide_fill_[side];
+                continue;
+            }
         }
         u8 mask = 0x3F;
         if (any_win) {
@@ -366,6 +386,9 @@ void Gba::ppu_render_line(int y) {
             else if (objwin && obj_window_[x]) mask = m_obj;
             else mask = m_out;
         }
+        // Objects past what the camera can reach (the next room's door, a secret's items) are
+        // not drawn; the background there repeats the room's edge (wide_fold).
+        if (wide_scene && (x - m < wide_reach_x0_ || x - m >= wide_reach_x1_)) mask &= ~0x10;
         int layer[2] = {5, 5};
         u16 col[2] = {backdrop, backdrop};
         int found = 0;

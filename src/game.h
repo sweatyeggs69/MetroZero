@@ -23,6 +23,7 @@ inline constexpr const char* kFileSafeTitle = "Metroid - Zero Mission";
 // GBA cartridge header of the supported dump.
 inline constexpr const char* kHeaderTitle = "ZEROMISSIONE";  // 0xA0, 12 bytes
 inline constexpr const char* kGameCode = "BMXE";             // 0xAC, 4 bytes
+inline constexpr const char* kMakerCode = "01";             // 0xB0, 2 bytes (Nintendo)
 inline constexpr unsigned kRevision = 0;                     // 0xBC
 inline constexpr std::size_t kRomSize = 8 * 1024 * 1024;
 
@@ -32,6 +33,24 @@ inline constexpr std::size_t kRomSize = 8 * 1024 * 1024;
 // accepted on a header match instead and the launcher labels it "header match (fingerprint not
 // pinned yet)".
 inline constexpr const char* kExpectedSha1 = "5de8536afe1f0078ee6fe1089f890e8c7aa0a6e8";
+
+// Other releases of the game, recognised only so the error message can say what the file is.
+// None of them can run: the recompiled code is the USA revision 0 code. SHA-1s are the ones the
+// community decompilation (metroidret/mzm) lists for each ROM it builds.
+struct OtherRelease {
+    const char* sha1;       // exact dump, or nullptr to match on the game code alone
+    const char* game_code;  // 0xAC
+    const char* name;       // shown to the user
+};
+inline constexpr OtherRelease kOtherReleases[] = {
+    {"58986c4d6f2e5ccdc04936cc8b7c9d378570710c", "BMXE", "the USA beta (prototype)"},
+    {"3c0b7ccd303c30ac5c4ffc9fb0aa7137a533ad69", "BMXP", "the European beta (prototype)"},
+    {"0fd107445a42e6f3a3e5ce8c865f412583179903", "BMXP", "the European release"},
+    {"096f07685a3dc9286e71aa0b761f233b5efa2fcd", "BMXJ", "the Japanese release"},
+    {nullptr, "BMXP", "a European release"},
+    {nullptr, "BMXJ", "a Japanese release"},
+    {nullptr, "BMXC", "the Chinese (iQue) release"},
+};
 
 // Battery save: 32 KiB SRAM (the ROM carries the SRAM_V113 library string).
 inline constexpr std::size_t kSaveSize = 32 * 1024;

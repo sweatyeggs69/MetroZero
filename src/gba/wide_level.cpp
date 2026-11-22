@@ -23,6 +23,7 @@
 // background wraps as on hardware, and a block layer that does not match is hidden rather
 // than showing stale VRAM. Only addresses and layout descriptions belong here; never copy
 // game data into the repo.
+#include <algorithm>
 #include <iterator>
 
 #include "gba.h"
@@ -36,6 +37,25 @@ constexpr u32 kCamera = 0x030013B4;    // 4 x {u16 x; u16 y} (gBg0XPosition...),
 constexpr int kMainLayer = 1;
 constexpr u32 kRoomEntry = 0x030000BC;  // gCurrentRoomEntry: u8 tileset, u8 bg0Prop, ...
 constexpr u16 kBgPropCloseUp = 0x41;    // BG_PROP_CLOSE_UP
+constexpr u8 kBgPropRle = 0x10;         // BG_PROP_RLE_COMPRESSED: the layer is a block layer
+// gCurrentScrolls: 2 x 12 bytes {u8 within; u16 xEnd; u16 xStart; u16 yStart; u16 yEnd}, x in
+// quarter pixels. ScrollProcess (0x080582C4) follows each entry whose within is non-zero. It
+// only runs in rooms whose gCurrentRoomEntry.scrollsFlag (+5) is 3; other rooms keep the camera
+// inside the room minus its padding (ScrollWithNoScrolls) and leave these entries stale.
+constexpr u32 kScrolls = 0x03000118;
+constexpr u32 kScrollSize = 12;
+constexpr u8 kRoomHasScrolls = 3;
+// The camera never shows the first and last 2 block columns of a room (SCREEN_X_BLOCK_PADDING).
+constexpr s32 kRoomPadding = 32;
+constexpr s32 kBlock = 16;
+constexpr u32 kCurrentArea = 0x03000054;  // gCurrentArea (u8), then gCurrentRoom (u8)
+// Rooms whose edge past the camera's reach is detailed art that looks wrong repeated, so the
+// sides there get a solid color instead: {area, room, BG palette entry to fill with}. A fixed
+// entry keeps the color steady (picking the edge's most common color each frame flickered).
+struct SolidEdgeRoom { u8 area, room, pal; };
+constexpr SolidEdgeRoom kSolidEdgeRooms[] = {
+    {5, 9, 17},  // Crateria: the bird statue's head next to the Power Grip climb (issue #22)
+};
 // BG3CNT while a door transition runs: 512x256, screen block 6, char block 1, priority 0.
 constexpr u16 kDoorTransitionBg3Cnt = 0x4604;
 
@@ -66,6 +86,9 @@ void Gba::wide_level_detect() {
     wide_scene_ = false;
     wide_main_bg_ = -1;
     wide_hud_prio_ = -1;
+    wide_reach_x0_ = -kMaxWideMargin;
+    wide_reach_x1_ = kScreenWidth + kMaxWideMargin;
+    wide_fill_on_ = {};
     if (!wide_margin_) return;
     const u16 dispcnt = u16(io_[0] | (io_[1] << 8));
     if ((dispcnt & 7) != 0) return;
@@ -73,6 +96,10 @@ void Gba::wide_level_detect() {
     const u32 tileset = wide_ram32(kTileset);
     const bool tileset_ok = in_ram(tileset) || ((tileset >> 24) >= 0x08 && (tileset >> 24) <= 0x09);
     bool matched[3] = {false, false, false};
+    auto bg_prop = [&](int layer) {  // gCurrentRoomEntry: u8 tileset, then u8 bg0Prop..bg3Prop
+        const u32 a = kRoomEntry + 1 + u32(layer);
+        return u8(wide_ram16(a & ~1u) >> ((a & 1) * 8));
+    };
     int bg_of_layer[3] = {-1, -1, -1};
 
     for (int bg = 0; bg < 4; ++bg) {
@@ -83,6 +110,12 @@ void Gba::wide_level_detect() {
         const int layer = int(sbb / 2);
         if (!(dispcnt & (0x100 << bg)) || bg_of_layer[layer] >= 0) continue;
         bg_of_layer[layer] = bg;
+        // Only a layer the room loads as blocks has a current layout in RAM. A room without a
+        // block BG0 (or BG2) leaves the previous room's layout and size there and fills the
+        // VRAM map with a blank tile, so with few tiles in view a stale layout could still
+        // pass the check below and its blocks (the last room's lava, pillars) showed in the
+        // side columns (issue #22).
+        if (layer != kMainLayer && !(bg_prop(layer) & kBgPropRle)) continue;
         WideLevel& L = wide_level_[bg];
         L.layer = layer;
         L.map = wide_ram32(kLayers + u32(layer) * 8);
@@ -178,12 +211,66 @@ void Gba::wide_level_detect() {
         return;
     }
     wide_main_bg_ = bg_of_layer[kMainLayer];
-    // The HUD (energy, missiles, minimap) is drawn with priority 0 objects; unused objects
-    // are parked at x = 255, which is visible in a wide view. Keep both in the 240 view.
+    // What the camera can reach: the current scroll areas (gCurrentScrolls), inside the room
+    // minus its 2 outer block columns, which the camera never shows. Past that are the
+    // room's hidden parts: secret passages that only open up once Samus is inside, the next
+    // room's door, unfinished scenery (issue #22). The side columns there repeat the nearest
+    // block column inside instead (wide_fold), usually a wall. In the rooms listed in
+    // kSolidEdgeRooms the edge is detailed art that looked wrong repeated, so the sides there
+    // get a solid color from the room's palette instead. The reach always includes the 240
+    // view itself, so the sides follow while the camera pans from one area to the next.
+    {
+        const WideLevel& L = wide_level_[wide_main_bg_];
+        const s32 view_x =
+            s32(u32(io_[0x10 + 4 * wide_main_bg_] | (io_[0x11 + 4 * wide_main_bg_] << 8)) & 0x1FF) + L.cam_x;
+        s32 x0 = kRoomPadding, x1 = L.tiles_w * 8 - kRoomPadding;
+        bool any = false;
+        s32 sx0 = 0, sx1 = 0;
+        const bool has_scrolls = (wide_ram16(kRoomEntry + 4) >> 8) == kRoomHasScrolls;
+        for (u32 i = 0; has_scrolls && i < 2; ++i) {
+            const u32 at = kScrolls + i * kScrollSize;
+            if ((wide_ram16(at) & 0xFF) == 0) continue;
+            const s32 start = s32(wide_ram16(at + 4)) >> 2, end = s32(wide_ram16(at + 2)) >> 2;
+            if (end <= start) continue;
+            sx0 = any ? std::min(sx0, start) : start;
+            sx1 = any ? std::max(sx1, end) : end;
+            any = true;
+        }
+        if (any) {
+            x0 = std::max(x0, sx0);
+            x1 = std::min(x1, sx1);
+        }
+        // Block-aligned edges keep the repeated columns whole blocks.
+        x0 = (x0 + kBlock - 1) / kBlock * kBlock;
+        x1 = x1 / kBlock * kBlock;
+        wide_reach_x0_ = std::min(x0, view_x) - view_x;
+        wide_reach_x1_ = std::max(x1, view_x + kScreenWidth) - view_x;
+        const int m = wide_margin_;
+        const u16 area_room = wide_ram16(kCurrentArea);
+        for (const SolidEdgeRoom& r : kSolidEdgeRooms) {
+            if (r.area != (area_room & 0xFF) || r.room != (area_room >> 8)) continue;
+            const u16 color = u16(pal_[r.pal * 2] | (pal_[r.pal * 2 + 1] << 8));
+            wide_fill_on_[0] = wide_reach_x0_ > -m;
+            wide_fill_on_[1] = wide_reach_x1_ < kScreenWidth + m;
+            wide_fill_ = {color, color};
+        }
+    }
+    // The HUD (energy, missiles, minimap) is drawn with priority 0 objects in the top rows;
+    // unused objects are parked at x = 255, which is visible in a wide view. Keep both in the
+    // 240 view (ppu_render_objects). Other priority 0 objects, such as the Kraid and Ridley
+    // statues, are part of the room and continue into the sides.
     wide_hud_prio_ = 0;
     // Block layers that did not match would show stale ring columns: hide their sides.
     for (int layer = 0; layer < 3; ++layer)
         if (bg_of_layer[layer] >= 0 && !matched[layer]) wide_level_[bg_of_layer[layer]].mode = WideMode::Hide;
+}
+
+// Screen column x (0 = left edge of the 240 view) moved into what the camera can reach, by
+// whole blocks of the main layer, so the side columns repeat the room's edge there.
+s32 Gba::wide_fold(s32 x) const {
+    if (x < wide_reach_x0_) return x + (wide_reach_x0_ - x + kBlock - 1) / kBlock * kBlock;
+    if (x >= wide_reach_x1_) return x - ((x - wide_reach_x1_) / kBlock + 1) * kBlock;
+    return x;
 }
 
 // The game only draws a sprite (enemies, items, doors' lights...) while its position is within
