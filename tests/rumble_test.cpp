@@ -1,4 +1,4 @@
-// Rumble: which changes in a blank IWRAM image turn into controller pulses. No ROM needed.
+// Rumble: which changes in a blank IWRAM image turn into controller rumble patterns. No ROM needed.
 #include <array>
 #include <cstdint>
 #include <cstdio>
@@ -30,8 +30,8 @@ int main() {
 
     // A hit for 20: a clear pulse on both motors.
     set16(ram, kEq + 6, 79);
-    rumble::Pulse p = w.step(ram, ewram);
-    CHECK(p && p.low >= 0.6f && p.high > 0);
+    rumble::Pattern p = w.step(ram, ewram);
+    CHECK(p && p.peak_low() >= 0.6f && p.peak_high() > 0);
 
     // Energy coming back (or a cheat refilling it) never rumbles.
     set16(ram, kEq + 6, 99);
@@ -45,14 +45,14 @@ int main() {
     // Death: full strength.
     set16(ram, kEq + 6, 0);
     p = w.step(ram, ewram);
-    CHECK(p && p.strength() == 1.0f && p.ms >= 500);
+    CHECK(p && p.strength() == 1.0f && p.total_ms() >= 500);
     set16(ram, kEq + 6, 99);
     w.step(ram, ewram);
 
     // A missile: a light tick on the small motor only.
     set16(ram, kEq + 8, 9);
     p = w.step(ram, ewram);
-    CHECK(p && p.low == 0 && p.high > 0);
+    CHECK(p && p.peak_low() == 0 && p.peak_high() > 0);
 
     // A super missile: a firmer tick.
     ram[kEq + 0xA] = 4;
@@ -60,7 +60,7 @@ int main() {
     w.step(ram, ewram);
     ram[kEq + 0xA] = 3;
     p = w.step(ram, ewram);
-    CHECK(p && p.low > 0 && p.high >= 0.5f);
+    CHECK(p && p.peak_low() > 0 && p.peak_high() >= 0.5f);
 
     // A bigger energy tank changes the maximum: a different file, so no damage pulse.
     set16(ram, kEq + 6, 50);
@@ -70,7 +70,7 @@ int main() {
     // The screen starts shaking for 30 frames, then counts down (no new pulse while it does).
     ram[iw(rumble::kScreenShakeY)] = 30;
     p = w.step(ram, ewram);
-    CHECK(p && p.low >= 0.5f && p.ms >= 30 * 16);
+    CHECK(p && p.peak_low() >= 0.5f && p.total_ms() >= 30 * 16);
     ram[iw(rumble::kScreenShakeY)] = 29;
     CHECK(!w.step(ram, ewram));
     ram[iw(rumble::kScreenShakeY)] = 0;
@@ -79,7 +79,7 @@ int main() {
     // A power bomb going off.
     ram[iw(rumble::kPowerBomb)] = 1;
     p = w.step(ram, ewram);
-    CHECK(p && p.low == 1.0f);
+    CHECK(p && p.peak_low() == 1.0f);
     ram[iw(rumble::kPowerBomb)] = 3;
     CHECK(!w.step(ram, ewram));
 
@@ -96,15 +96,44 @@ int main() {
     set16(ram, kEq + 6, 5);
     CHECK(!w.step(ram, ewram));
 
-    // Mixer: a weaker pulse never cuts a stronger one short; it plays again once that is over.
-    rumble::Mixer mix;
-    CHECK(mix.take({1.0f, 1.0f, 100}));
-    mix.step();
-    CHECK(!mix.take({0.0f, 0.35f, 70}));
-    for (int i = 0; i < 10; ++i) mix.step();
-    CHECK(!mix.playing());
-    CHECK(mix.take({0.0f, 0.35f, 70}));
-    CHECK(!mix.take({}));
+    // Player: steps through a pattern a frame at a time, and a lower priority pattern never cuts a
+    // higher one short; it plays again once that is over.
+    {
+        rumble::Player pl;
+        CHECK(pl.start(rumble::patterns::kDeath));
+        auto s = pl.next();
+        CHECK(s && s->low == 1.0f && s->high == 1.0f && s->ms > 250);  // first beat, with overlap
+        CHECK(!pl.start(rumble::patterns::kMissile));
+        int commands = 1, frames = 0;
+        bool paused = false;
+        while (pl.playing() && frames < 200) {
+            if (auto c = pl.next()) {
+                ++commands;
+                if (c->low == 0 && c->high == 0 && pl.playing()) paused = true;
+            }
+            ++frames;
+        }
+        CHECK(paused);                          // the pauses between beats stop the motors
+        CHECK(commands == 7);                   // six steps, then the final stop
+        CHECK(frames >= 75 && frames <= 90);    // about 1.4 s of game frames
+        CHECK(!pl.playing());
+        CHECK(pl.start(rumble::patterns::kMissile));
+        CHECK(pl.start(rumble::patterns::kDeath));  // a death interrupts anything
+        CHECK(!pl.start({}));
+    }
+
+    // The pattern table: different events feel different.
+    {
+        namespace pt = rumble::patterns;
+        CHECK(pt::kMissile.peak_low() == 0 && pt::kMissile.peak_high() > 0);  // small motor only
+        CHECK(pt::kDeath.total_ms() > pt::kHeavyHit.total_ms());
+        CHECK(pt::kPowerBomb.strength() == 1.0f && pt::kPowerBomb.steps[0].low < 0.5f);  // builds up
+        const rumble::Pattern scratch = rumble::hit(1, 100), big = rumble::hit(40, 100);
+        CHECK(scratch.count == 1 && big.count == 2 && big.strength() > scratch.strength());
+        const rumble::Pattern sh = rumble::shake(600, 0.8f);
+        CHECK(sh.count > 4 && sh.total_ms() == 600 && sh.priority == pt::kShakePriority);
+        CHECK(rumble::shake(5000, 1.0f).total_ms() == 1200);
+    }
 
     // Strength scaling.
     CHECK(rumble::motor(1.0f, 100) == 0xFFFF);
