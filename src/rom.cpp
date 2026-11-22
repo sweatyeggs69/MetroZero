@@ -31,10 +31,12 @@ std::string mib(std::size_t bytes) {
     return std::to_string(bytes) + " bytes";
 }
 
-// Files that start with a 512-byte copier/flash-cart header: the real header sits at 512.
+// Files that start with a 512-byte copier/flash-cart header: the real header sits at 512. The
+// size is no guide once the dump is also trimmed, so look at the headers; a size of 512 past a
+// whole KiB also counts, for a copier header in front of a header that was rewritten as well.
 bool has_copier_header(const std::vector<std::uint8_t>& d) {
-    return d.size() >= 512 + 0xC0 && d.size() % 1024 == 512 && !header_valid(d.data()) &&
-           header_valid(d.data() + 512);
+    return d.size() >= 512 + 0xC0 && !header_valid(d.data()) &&
+           (header_valid(d.data() + 512) || d.size() % 1024 == 512);
 }
 
 void join(std::string& to, const std::string& what) {

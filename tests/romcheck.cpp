@@ -78,6 +78,15 @@ static int dump_selftest() {
     both[512 + 0xBE] = 0x34;
     expect("copier header + trimmed + rewritten header", both, true, "cartridge header");
 
+    Bytes copier_odd(512, 0);
+    copier_odd.insert(copier_odd.end(), rom.begin(), rom.end() - 4000);
+    expect("copier header + trimmed to an odd size", copier_odd, true, "copier header");
+
+    Bytes copier_bad(512, 0);
+    copier_bad.insert(copier_bad.end(), rom.begin(), rom.end());
+    copier_bad[512 + 0xB2] = 0;  // header made invalid, too
+    expect("copier header + broken header", copier_bad, true, "cartridge header");
+
     Bytes hacked = rom;
     hacked[0x1000] ^= 1;  // any real change (a hack, another revision) must still be rejected
     expect("changed game data", hacked, false, "");
