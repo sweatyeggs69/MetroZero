@@ -49,12 +49,19 @@ constexpr u8 kRoomHasScrolls = 3;
 constexpr s32 kRoomPadding = 32;
 constexpr s32 kBlock = 16;
 constexpr u32 kCurrentArea = 0x03000054;  // gCurrentArea (u8), then gCurrentRoom (u8)
-// Rooms whose edge past the camera's reach is detailed art that looks wrong repeated, so the
-// sides there get a solid color instead: {area, room, BG palette entry to fill with}. A fixed
-// entry keeps the color steady (picking the edge's most common color each frame flickered).
-struct SolidEdgeRoom { u8 area, room, pal; };
-constexpr SolidEdgeRoom kSolidEdgeRooms[] = {
-    {5, 9, 17},  // Crateria: the bird statue's head next to the Power Grip climb (issue #22)
+// The clipdata layer follows the 3 block layers in gBgPointersAndDimensions (same layout), and
+// gTilemapAndClipPointers.pClipCollisions (u8 per clip value) follows pTilemap.
+constexpr u32 kClipLayer = kLayers + 3 * 8;
+constexpr u32 kClipCollisions = 0x03005454;
+constexpr u8 kClipSolid = 1;  // CLIPDATA_TYPE_SOLID
+// Rooms where a doorway past the camera's reach is hidden behind room art, so the door tube
+// showing in the side columns looked out of place (issue #22: the bird statue's head next to
+// the Power Grip climb). Their doorway rows past the edge show the room's filler block, the
+// rock the rest of the edge is made of, instead of repeating the tube (issue #26).
+// {area, room, side (0 = left, 1 = right)}
+struct DoorFillRoom { u8 area, room, side; };
+constexpr DoorFillRoom kDoorFillRooms[] = {
+    {5, 9, 0},  // Crateria
 };
 // BG3CNT while a door transition runs: 512x256, screen block 6, char block 1, priority 0.
 constexpr u16 kDoorTransitionBg3Cnt = 0x4604;
@@ -76,7 +83,10 @@ u32 Gba::wide_ram32(u32 a) const { return u32(wide_ram16(a)) | (u32(wide_ram16(a
 
 u16 Gba::wide_level_entry(int bg, s32 tx, s32 ty) const {
     const WideLevel& L = wide_level_[bg];
-    const u16 block = wide_ram16(L.map + u32(((ty >> 1) * L.width + (tx >> 1)) * 2));
+    return wide_block_entry(wide_ram16(L.map + u32(((ty >> 1) * L.width + (tx >> 1)) * 2)), tx, ty);
+}
+
+u16 Gba::wide_block_entry(u16 block, s32 tx, s32 ty) const {
     const u32 quarter = u32(tx & 1) + u32(ty & 1) * 2;
     return wide_ram16(wide_ram32(kTileset) + (u32(block) * 4 + quarter) * 2);
 }
@@ -88,7 +98,8 @@ void Gba::wide_level_detect() {
     wide_hud_prio_ = -1;
     wide_reach_x0_ = -kMaxWideMargin;
     wide_reach_x1_ = kScreenWidth + kMaxWideMargin;
-    wide_fill_on_ = {};
+    wide_room_edge_ = {};
+    wide_door_fill_ = {};
     if (!wide_margin_) return;
     const u16 dispcnt = u16(io_[0] | (io_[1] << 8));
     if ((dispcnt & 7) != 0) return;
@@ -212,47 +223,64 @@ void Gba::wide_level_detect() {
     }
     wide_main_bg_ = bg_of_layer[kMainLayer];
     // What the camera can reach: the current scroll areas (gCurrentScrolls), inside the room
-    // minus its 2 outer block columns, which the camera never shows. Past that are the
-    // room's hidden parts: secret passages that only open up once Samus is inside, the next
-    // room's door, unfinished scenery (issue #22). The side columns there repeat the nearest
-    // block column inside instead (wide_fold), usually a wall. In the rooms listed in
-    // kSolidEdgeRooms the edge is detailed art that looked wrong repeated, so the sides there
-    // get a solid color from the room's palette instead. The reach always includes the 240
-    // view itself, so the sides follow while the camera pans from one area to the next.
+    // minus its 2 outer block columns, which the camera never shows. Past a scroll area are
+    // the room's hidden parts (secret passages that only open up once Samus is inside, issue
+    // #22): the side columns there repeat the nearest block column inside (wide_fold). The
+    // room's outer columns are decided per block row (wide_level_line): mostly they are the
+    // wall the room is built into and show as they are; only doorways and other openings are
+    // unfinished there. The reach always includes the 240 view itself, rounded out to whole
+    // blocks so a repeated column is never a partial one.
     {
         const WideLevel& L = wide_level_[wide_main_bg_];
         const s32 view_x =
             s32(u32(io_[0x10 + 4 * wide_main_bg_] | (io_[0x11 + 4 * wide_main_bg_] << 8)) & 0x1FF) + L.cam_x;
-        s32 x0 = kRoomPadding, x1 = L.tiles_w * 8 - kRoomPadding;
-        bool any = false;
-        s32 sx0 = 0, sx1 = 0;
-        const bool has_scrolls = (wide_ram16(kRoomEntry + 4) >> 8) == kRoomHasScrolls;
-        for (u32 i = 0; has_scrolls && i < 2; ++i) {
-            const u32 at = kScrolls + i * kScrollSize;
-            if ((wide_ram16(at) & 0xFF) == 0) continue;
-            const s32 start = s32(wide_ram16(at + 4)) >> 2, end = s32(wide_ram16(at + 2)) >> 2;
-            if (end <= start) continue;
-            sx0 = any ? std::min(sx0, start) : start;
-            sx1 = any ? std::max(sx1, end) : end;
-            any = true;
+        const s32 pad0 = kRoomPadding, pad1 = L.tiles_w * 8 - kRoomPadding;
+        const u16 area_room = wide_ram16(kCurrentArea);
+        s32 sx0 = pad0, sx1 = pad1;
+        if (wide_snap_.area_room == area_room && wide_snap_.scrolls) {
+            sx0 = wide_snap_.x0;
+            sx1 = wide_snap_.x1;
         }
-        if (any) {
-            x0 = std::max(x0, sx0);
-            x1 = std::min(x1, sx1);
+        // A pan from one scroll area to the next shows both until the view is inside the new
+        // one; cutting the side at the new area's edge mid-pan made the sides jump (issue #26).
+        if (wide_prev_room_ != area_room) {
+            wide_prev_room_ = area_room;
+            wide_prev_x0_ = sx0;
+            wide_prev_x1_ = sx1;
+        } else if (view_x >= sx0 && view_x + kScreenWidth <= sx1) {
+            wide_prev_x0_ = sx0;
+            wide_prev_x1_ = sx1;
+        } else {
+            sx0 = std::min(sx0, wide_prev_x0_);
+            sx1 = std::max(sx1, wide_prev_x1_);
         }
         // Block-aligned edges keep the repeated columns whole blocks.
-        x0 = (x0 + kBlock - 1) / kBlock * kBlock;
-        x1 = x1 / kBlock * kBlock;
-        wide_reach_x0_ = std::min(x0, view_x) - view_x;
-        wide_reach_x1_ = std::max(x1, view_x + kScreenWidth) - view_x;
-        const int m = wide_margin_;
-        const u16 area_room = wide_ram16(kCurrentArea);
-        for (const SolidEdgeRoom& r : kSolidEdgeRooms) {
-            if (r.area != (area_room & 0xFF) || r.room != (area_room >> 8)) continue;
-            const u16 color = u16(pal_[r.pal * 2] | (pal_[r.pal * 2 + 1] << 8));
-            wide_fill_on_[0] = wide_reach_x0_ > -m;
-            wide_fill_on_[1] = wide_reach_x1_ < kScreenWidth + m;
-            wide_fill_ = {color, color};
+        s32 x0 = std::max(pad0, (sx0 + kBlock - 1) / kBlock * kBlock);
+        s32 x1 = std::min(pad1, sx1 / kBlock * kBlock);
+        wide_room_edge_[0] = x0 <= pad0;
+        wide_room_edge_[1] = x1 >= pad1;
+        if (view_x < x0) x0 = view_x >= 0 ? view_x / kBlock * kBlock : -((-view_x + kBlock - 1) / kBlock * kBlock);
+        if (view_x + kScreenWidth > x1) x1 = (view_x + kScreenWidth + kBlock - 1) / kBlock * kBlock;
+        wide_reach_x0_ = x0 - view_x;
+        wide_reach_x1_ = x1 - view_x;
+        for (const DoorFillRoom& r : kDoorFillRooms)
+            if (r.area == (area_room & 0xFF) && r.room == (area_room >> 8)) wide_door_fill_[r.side] = true;
+        for (int side = 0; side < 2; ++side) {
+            // The filler block: the most common block of the room's outermost column.
+            if (wide_door_fill_[side]) {
+                const s32 bx = side ? L.width - 1 : 0;
+                u16 best = 0;
+                int best_n = 0;
+                for (s32 by = 0; by < L.height; ++by) {
+                    const u16 blk = wide_ram16(L.map + u32((by * L.width + bx) * 2));
+                    int n = 0;
+                    for (s32 k = 0; k < L.height; ++k)
+                        if (wide_ram16(L.map + u32((k * L.width + bx) * 2)) == blk) ++n;
+                    if (n > best_n) best_n = n, best = blk;
+                    if (best_n * 2 > L.height) break;
+                }
+                wide_fill_block_[side] = best;
+            }
         }
     }
     // The HUD (energy, missiles, minimap) is drawn with priority 0 objects in the top rows;
@@ -263,6 +291,59 @@ void Gba::wide_level_detect() {
     // Block layers that did not match would show stale ring columns: hide their sides.
     for (int layer = 0; layer < 3; ++layer)
         if (bg_of_layer[layer] >= 0 && !matched[layer]) wide_level_[bg_of_layer[layer]].mode = WideMode::Hide;
+}
+
+// Scroll areas, read at VBlank: the game has finished the frame then, while at line 0 it may
+// be halfway through rewriting gCurrentScrolls (both entries briefly not active, which made the
+// whole room count as reachable for one frame and a secret passage flicker into view).
+void Gba::wide_level_snapshot() {
+    wide_snap_ = WideSnapshot{};
+    wide_snap_.area_room = wide_ram16(kCurrentArea);
+    if ((wide_ram16(kRoomEntry + 4) >> 8) != kRoomHasScrolls) return;
+    for (u32 i = 0; i < 2; ++i) {
+        const u32 at = kScrolls + i * kScrollSize;
+        if ((wide_ram16(at) & 0xFF) == 0) continue;
+        const s32 start = s32(wide_ram16(at + 4)) >> 2, end = s32(wide_ram16(at + 2)) >> 2;
+        if (end <= start) continue;
+        wide_snap_.x0 = wide_snap_.scrolls ? std::min(wide_snap_.x0, start) : start;
+        wide_snap_.x1 = wide_snap_.scrolls ? std::max(wide_snap_.x1, end) : end;
+        wide_snap_.scrolls = true;
+    }
+}
+
+// Per line: what each side shows past the reach. Past a scroll area: the nearest block column
+// inside, repeated (Fold). Past the room's own edge it depends on the main layer's block row
+// there. Where the edge block is solid wall, the outer columns are more of that wall (usually
+// the room's filler block), so they show as they are (Real); repeating the edge column there
+// stretched the wall's outline into stripes in nearly every room (issue #26). Where the edge
+// is open (a doorway, a passage), the outer columns are unfinished (the door tube stops, the
+// floor ends): repeat the edge column, which continues the tube. The row above and below an
+// opening count with it, so a tube's frame continues too. In kDoorFillRooms those rows show
+// the filler block instead.
+void Gba::wide_level_line(int y) {
+    wide_edge_ = {WideEdge::Fold, WideEdge::Fold};
+    if (!wide_scene_ || wide_main_bg_ < 0) return;
+    const WideLevel& L = wide_level_[wide_main_bg_];
+    if (L.mode != WideMode::Level) return;
+    const s32 ay = s32(y) + s32(u32(io_[0x12 + 4 * wide_main_bg_] | (io_[0x13 + 4 * wide_main_bg_] << 8)) & 0x1FF) + L.cam_y;
+    const s32 by = ay >> 4;
+    const u32 clip = wide_ram32(kClipLayer);
+    const s32 cw = wide_ram16(kClipLayer + 4), ch = wide_ram16(kClipLayer + 6);
+    const u32 coll = wide_ram32(kClipCollisions);
+    if (ay < 0 || (clip >> 24) != 0x02 || cw != L.width || ch != L.height || !in_ram(coll)) return;
+    auto solid = [&](s32 bx, s32 row) {
+        if (row < 0 || row >= ch) return true;
+        const u16 c = wide_ram16(clip + u32((row * cw + bx) * 2));
+        const u32 a = coll + c;
+        return u8(wide_ram16(a & ~1u) >> ((a & 1) * 8)) == kClipSolid;
+    };
+    if (by >= ch) return;
+    for (int side = 0; side < 2; ++side) {
+        if (!wide_room_edge_[side]) continue;
+        const s32 bx = side ? (L.tiles_w * 8 - kRoomPadding) / kBlock - 1 : kRoomPadding / kBlock;
+        if (solid(bx, by) && solid(bx, by - 1) && solid(bx, by + 1)) wide_edge_[side] = WideEdge::Real;
+        else wide_edge_[side] = wide_door_fill_[side] ? WideEdge::Fill : WideEdge::Fold;
+    }
 }
 
 // Screen column x (0 = left edge of the 240 view) moved into what the camera can reach, by

@@ -62,6 +62,7 @@ void Gba::ppu_advance(u32 cycles) {
             if (++vcount_ == kLinesPerFrame) vcount_ = 0;
             if (vcount_ == 160) {
                 frame_done_ = true;
+                wide_level_snapshot();
                 if (io_[4] & 0x08) request_irq(0);
                 dma_trigger(1);
                 ppu_write_bg_ref(0);
@@ -101,16 +102,19 @@ void Gba::ppu_render_text_bg(int bg, int y, u16* color, u8* opaque) {
             // Outside the original view the VRAM ring holds stale columns: rebuild the
             // entry from the level layout in RAM instead (wide_level.cpp), or hide it.
             const WideLevel& L = wide_level_[bg];
-            if (L.mode == WideMode::Level) {
+            const int side = xx < wide_reach_x0_ ? 0 : xx >= wide_reach_x1_ ? 1 : -1;
+            const WideEdge edge = side >= 0 ? wide_edge_[side] : WideEdge::Real;
+            if (L.mode == WideMode::Level && edge == WideEdge::Fold) {
                 // Past what the camera can reach, repeat the room's nearest block column
-                // (or a solid color, see below).
+                // (see wide_level_line).
                 xx = wide_fold(xx);
                 sx = (u32(xx) + hofs) & wmask;
             }
             const s32 ax = s32(xx) + s32(hofs) + L.cam_x;
             const s32 ay = s32(yy) + s32(vofs) + L.cam_y;
             if (L.mode == WideMode::Level && ax >= 0 && ay >= 0 && ax < L.tiles_w * 8 && ay < L.tiles_h * 8) {
-                e = wide_level_entry(bg, ax >> 3, ay >> 3);
+                e = edge == WideEdge::Fill && L.layer == 1 /* main */ ? wide_block_entry(wide_fill_block_[side], ax >> 3, ay >> 3)
+                                                           : wide_level_entry(bg, ax >> 3, ay >> 3);
             } else {
                 opaque[x] = 0;  // hidden, or beyond the level's edge
                 continue;
@@ -277,6 +281,7 @@ void Gba::ppu_render_objects(int y) {
 
 void Gba::ppu_render_line(int y) {
     if (y == 0) wide_level_detect();
+    if (wide_margin_) wide_level_line(y);
     u16 dispcnt = rd16(&io_[0]);
     const int m = wide_margin_, width = kScreenWidth + 2 * m;
     u16* out = m ? &wide_frame_[std::size_t(y) * std::size_t(width)] : &frame_[y * kScreenWidth];
@@ -369,13 +374,6 @@ void Gba::ppu_render_line(int y) {
                 out[x] = 0;
                 continue;
             }
-            // Past what the camera can reach, where repeating the edge would not look like a
-            // wall (wide_level_detect): a solid color taken from the room's edge.
-            const int side = x - m < wide_reach_x0_ ? 0 : x - m >= wide_reach_x1_ ? 1 : -1;
-            if (side >= 0 && wide_fill_on_[side]) {
-                out[x] = wide_fill_[side];
-                continue;
-            }
         }
         u8 mask = 0x3F;
         if (any_win) {
@@ -387,7 +385,7 @@ void Gba::ppu_render_line(int y) {
             else mask = m_out;
         }
         // Objects past what the camera can reach (the next room's door, a secret's items) are
-        // not drawn; the background there repeats the room's edge (wide_fold).
+        // not drawn (wide_level_line decides what the background shows there).
         if (wide_scene && (x - m < wide_reach_x0_ || x - m >= wide_reach_x1_)) mask &= ~0x10;
         int layer[2] = {5, 5};
         u16 col[2] = {backdrop, backdrop};
