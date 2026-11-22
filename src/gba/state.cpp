@@ -221,7 +221,11 @@ bool Gba::load_state(const std::vector<u8>& data, std::string* error) {
     wide_main_bg_ = -1;
     wide_reach_x0_ = -kMaxWideMargin;
     wide_reach_x1_ = kScreenWidth + kMaxWideMargin;
-    wide_fill_on_ = {};
+    wide_room_edge_ = {};
+    wide_door_fill_ = {};
+    wide_edge_ = {};
+    wide_prev_room_ = 0xFFFF;
+    wide_level_snapshot();  // states are taken between frames, so RAM holds a finished frame
     wide_hud_prio_ = -1;
     return true;
 }

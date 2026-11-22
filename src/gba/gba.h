@@ -173,6 +173,7 @@ private:
     // Widescreen level reconstruction (wide_level.cpp, specific to this game).
     void wide_level_detect();
     u16 wide_level_entry(int bg, s32 tx, s32 ty) const;  // entry of wide_level_[bg] at level tile (tx, ty)
+    u16 wide_block_entry(u16 block, s32 tx, s32 ty) const;  // tilemap entry of a block at level tile (tx, ty)
     u16 wide_ram16(u32 a) const;
     u32 wide_ram32(u32 a) const;
     void wide_sprite_patch(int margin);  // 0 restores the original code
@@ -285,12 +286,34 @@ private:
     bool wide_scene_ = false;  // widen this frame at all (otherwise the sides stay black)
     int wide_main_bg_ = -1;    // in a wide scene: side columns outside this BG's level are black
     // In a wide scene: the screen columns [x0, x1) of the part of the room the camera can
-    // reach. Side columns past them repeat the nearest block column inside (wide_fold).
+    // reach. What the side columns past them show is decided per side (and per block row at
+    // the room's own edge) by wide_level_line, as wide_edge_ says.
     s32 wide_reach_x0_ = -kMaxWideMargin, wide_reach_x1_ = kScreenWidth + kMaxWideMargin;
     s32 wide_fold(s32 x) const;
-    // Per side (left, right): fill the columns past the reach with a solid color instead.
-    std::array<bool, 2> wide_fill_on_{};
-    std::array<u16, 2> wide_fill_{};
+    // Per side (left, right): the reach ends at the room's outer 2 block columns (true) or at a
+    // scroll area inside the room (false).
+    std::array<bool, 2> wide_room_edge_{};
+    std::array<bool, 2> wide_door_fill_{};  // per side: fill doorways past the room's edge (wide_level.cpp)
+    std::array<u16, 2> wide_fill_block_{};  // per side: the room's filler block
+    // Per side, for the line being drawn: Fold = repeat the nearest block column inside,
+    // Real = the room's own blocks, Fill = the main layer shows wide_fill_block_ instead.
+    enum class WideEdge : u8 { Fold, Real, Fill };
+    std::array<WideEdge, 2> wide_edge_{};
+    void wide_level_line(int y);
+    // Scroll areas, read when the game has finished a frame (VBlank) rather than at line 0,
+    // where the game may be in the middle of rewriting them (issue #26: the hidden part of a
+    // room flickered into view for a frame).
+    void wide_level_snapshot();
+    struct WideSnapshot {
+        u16 area_room = 0xFFFF;
+        bool scrolls = false;  // x0/x1 hold the active scroll areas' span (level pixels)
+        s32 x0 = 0, x1 = 0;
+    };
+    WideSnapshot wide_snap_{};
+    // While the camera pans from one scroll area to the next it shows both: the last area the
+    // camera rested in stays reachable until the view is inside the new one.
+    u16 wide_prev_room_ = 0xFFFF;
+    s32 wide_prev_x0_ = 0, wide_prev_x1_ = 0;
     int wide_hud_prio_ = -1;   // in a wide scene: HUD objects (this priority, top rows or parked) stay in the 240 view
     bool frame_done_ = false;
     u64 frame_count_ = 0;
