@@ -3,22 +3,9 @@
   "format": 1,
   "name": "MetroZero",
   "repo": "sweatyeggs69/MetroZero",
-  "game": {
-    "kind": "iso",
-    "label": "Your own Game Boy Advance ROM (.gba) of Metroid: Zero Mission, USA release (AGB-BMXE), revision 0.",
-    "dumps": [
-      { "name": "USA", "size": 8388608, "crc32": "5C61A844" }
-    ]
-  },
   "start": {
     "program": ["MetroZero.exe", "usr/bin/metrozero", "metrozero", "AppRun"],
-    "args": ["--game", "{game}"]
-  },
-  "prepare": {
-    "program": ["MetroZero.exe", "usr/bin/metrozero", "metrozero", "AppRun"],
-    "args": ["--prepare", "--game", "{game}"],
-    "label": "Checking your ROM and setting it as MetroZero's game",
-    "timeout": 60
+    "args": []
   },
   "config": [
     {
@@ -27,8 +14,7 @@
       "file": [
         { "path": "{config}/MetroZero/MetroZero/settings.ini", "if": "{config}/Microsoft/Windows" },
         { "path": "{local}/MetroZero/MetroZero/settings.ini" }
-      ],
-      "game_path": "rom.path"
+      ]
     }
   ],
   "folders": {
@@ -43,10 +29,6 @@
     "{local}/MetroZero/MetroZero/saves",
     "{local}/MetroZero/MetroZero/states"
   ],
-  "exit_codes": {
-    "2": "MetroZero couldn't find your ROM. Pick it again on the game's page.",
-    "3": "That ROM isn't the supported dump. MetroZero needs Metroid: Zero Mission (USA), revision 0."
-  },
   "settings": [
     {
       "id": "window",
