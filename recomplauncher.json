@@ -7,7 +7,7 @@
     "kind": "iso",
     "label": "Your own Game Boy Advance ROM (.gba) of Metroid: Zero Mission, USA release (AGB-BMXE), revision 0.",
     "dumps": [
-      { "name": "USA", "size": 8388608, "crc32": "6C75479C" }
+      { "name": "USA", "size": 8388608, "crc32": "5C61A844" }
     ]
   },
   "start": {
